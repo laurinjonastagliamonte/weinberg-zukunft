@@ -59,9 +59,21 @@ Schalter „Konzept“ in der Analyse, immer an in Simulation (Wall-Mulde-System
 - **Mittelhang:** Keylines alle 5 m – Wall mit Reben (weiß), Mulde 1 m dahinter (blau)
 - **Auslauf:** weitere Keylines alle 8 m, breitere Mulden (1,5 m), Becken am Hangfuß
 - **Querriegel** je 10-m-Kammer, **Überlauf mit Steinen** in der Kammermitte
-- **Weg des Wassers:** blaue Linien zeigen, wie Wasser durch das System läuft (fest bis zur ersten Mulde, gestrichelt = Überlauf)
 
 Die echten Abstände (3,5 / 5 / 8 m) wären auf 2 km nicht zu sehen. Dargestellt werden sie mit
 32 / 58 / 95 m (`KEYLINE.vis` in `js/terrain.js`): oben eng, nach unten deutlich weiter.
 
 Änderbar in `js/terrain.js` → `THRESHOLDS`.
+
+## Problemzonen (Analyse → „Problemzonen“)
+
+Aus der Geländelage abgeleitet, keine Messdaten (in `js/terrain.js`):
+
+| Problem | Kriterium |
+|---|---|
+| Frost | Senke: 6 m tiefer als die Umgebung im 300-m-Umkreis, flacher als 10 % (Kaltluft) |
+| Trockenheit | steiler als 18 %, nach Süd bis West geneigt, gewölbt |
+| Feuchte | flach (unter 10 %) mit großem Einzugsgebiet (Feuchteindex) |
+| Wind | exponierter Rücken: 6 m über der Umgebung, obere Hanglage |
+
+Maßnahmen je Problem stehen in `js/data.js` → `problemMeasures` und erscheinen in der Empfehlung je Zone.

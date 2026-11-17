@@ -47,6 +47,7 @@
     <div class="toolbar glass-dark">
       <button data-mode="zonen" class="active">Zonen</button>
       <button data-mode="hoehen">Höhenlinien</button>
+      <button data-mode="probleme">Problemzonen</button>
       <button data-view3d="draufsicht">Draufsicht</button>
       <button data-view3d="schraeg">3D</button>
       <button data-toggle="concept">Konzept</button>
@@ -59,13 +60,9 @@
       <p class="note" id="data-note">Höhendaten aus eurem STL-Modell. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).</p>
       <h3>Zonen nach Neigung</h3>
       <ul class="zones" id="zones"></ul>
-      <h3>Wetter je Jahreszeit</h3>
-      <div class="seasons">
-        <div><strong>Frühling</strong><span>Daten folgen</span></div>
-        <div><strong>Sommer</strong><span>Daten folgen</span></div>
-        <div><strong>Herbst</strong><span>Daten folgen</span></div>
-        <div><strong>Winter</strong><span>Daten folgen</span></div>
-      </div>
+      <h3>Problemzonen</h3>
+      <ul class="zones problems" id="problems"></ul>
+      <p class="note small-note">Aus der Geländelage abgeleitet (Senken, Hangrichtung, Wölbung, Einzugsgebiet), keine Messdaten. Später mit Wetter- und Bodendaten abgleichen.</p>
       <button class="cta" data-goto="3">Weiter zur Simulation →</button>
     </aside>
   </section>
@@ -76,7 +73,6 @@
     <div class="toolbar glass-dark">
       <button data-v3="schraeg" class="active">3D</button>
       <button data-v3="draufsicht">Draufsicht</button>
-      <button data-toggle="paths">Weg des Wassers</button>
       <button data-toggle="labels">Beschriftung</button>
     </div>
     <aside class="side glass-dark">
@@ -101,7 +97,6 @@
         <button class="btn ghost" id="reset">Zurücksetzen</button>
       </div>
       <ul class="legend">
-        <li><i class="line blue"></i>Weg des Wassers (gestrichelt: Überlauf)</li>
         <li><i style="background:#5C7CFF"></i>Wasser fließt</li>
         <li><i style="background:#9FE0FF"></i>über Rinne geleitet (Steilgürtel)</li>
         <li><i class="line"></i>Wall mit Reben · <i class="line blue"></i>Mulde dahinter</li>

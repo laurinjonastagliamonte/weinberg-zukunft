@@ -50,6 +50,13 @@
       measures: ['wird in der Simulation als Ziel des Abflusses gezählt', 'Fläche nur zur Orientierung eingeblendet'],
       plants: {},
     },
+    // Was tun bei Problemzonen (allgemeine Gestaltungsregeln, mit Team/Expert:innen prüfen)
+    problemMeasures: {
+      frost: 'Keine frostempfindlichen Arten (Feige, Kaki, Granatapfel) in Senken, spät austreibende Sorten, Kaltluft abfließen lassen statt mit dichten Hecken stauen.',
+      trocken: 'Mulden hier zuerst bauen, tief wurzelnde Begrünung (Luzerne, Esparsette, Trespe), Boden bedeckt halten.',
+      feucht: 'Staunässefeste Arten (Weide, Beinwell, Seggen), keine Reben, Wasser hier bewusst versickern lassen.',
+      wind: 'Windschutz am Rand mit Hecken (Schlehe, Hasel, Hagebutte), Junganlagen geschützt setzen.',
+    },
     toolkit: [
       ['Versickerungsmulde', '1 m breit, 10 m lang, hält kurz bis 30 cm Wasser, bis es versickert'],
       ['Wall', 'aus dem Aushub, 30–40 cm hoch'],

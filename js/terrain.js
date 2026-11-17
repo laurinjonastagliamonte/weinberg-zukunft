@@ -248,6 +248,65 @@
     return [dx / l, dy / l];
   }
 
+  // ---- Problemzonen aus dem Relief (keine Messdaten, sondern Geländelage) ----
+  // Frost:       Senken und Tallagen, in denen sich Kaltluft sammelt
+  // Trockenheit: steile, nach Süden bis Westen geneigte, gewölbte Hänge (viel Sonne, schneller Abfluss)
+  // Feuchte:     flache Stellen mit großem Einzugsgebiet (Staunässe, Wasser sammelt sich)
+  // Wind:        exponierte Kuppen und Rücken
+  const PROBLEM_BITS = { frost: 1, trocken: 2, feucht: 4, wind: 8 };
+  const PROBLEMS = {
+    frost: { key: 'frost', name: 'Frost', why: 'Senken und Tallagen, Kaltluft sammelt sich', color: '#9FE0FF' },
+    trocken: { key: 'trocken', name: 'Trockenheit', why: 'steile Süd- bis Westhänge, viel Sonne, schneller Abfluss', color: '#F1E62B' },
+    feucht: { key: 'feucht', name: 'Feuchte', why: 'flach mit großem Einzugsgebiet, Staunässe', color: '#2433F0' },
+    wind: { key: 'wind', name: 'Wind', why: 'exponierte Kuppen und Rücken', color: '#E5402A' },
+  };
+  const PROBLEM = new Uint8Array(N * N);
+  {
+    // Mittelwert der Höhe im Umkreis (Summen-Tabelle)
+    const S = new Float64Array((N + 1) * (N + 1));
+    for (let j = 0; j < N; j++)
+      for (let i = 0; i < N; i++)
+        S[(j + 1) * (N + 1) + i + 1] = H[idx(i, j)] + S[j * (N + 1) + i + 1] + S[(j + 1) * (N + 1) + i] - S[j * (N + 1) + i];
+    const mean = (i, j, r) => {
+      const i0 = Math.max(0, i - r), i1 = Math.min(N - 1, i + r), j0 = Math.max(0, j - r), j1 = Math.min(N - 1, j + r);
+      const sum = S[(j1 + 1) * (N + 1) + i1 + 1] - S[j0 * (N + 1) + i1 + 1] - S[(j1 + 1) * (N + 1) + i0] + S[j0 * (N + 1) + i0];
+      return sum / ((i1 - i0 + 1) * (j1 - j0 + 1));
+    };
+    const r150 = Math.round(150 / CELL), r300 = Math.round(300 / CELL);
+    for (let j = 0; j < N; j++)
+      for (let i = 0; i < N; i++) {
+        const k = idx(i, j);
+        if (TOWN[k]) continue;
+        const tpi150 = H[k] - mean(i, j, r150);
+        const tpi300 = H[k] - mean(i, j, r300);
+        const s = SLOPE[k];
+        const asp = ASPECT[k];
+        const twi = Math.log((ACC[k] * CELL) / Math.max(s / 100, 0.01));
+        let m = 0;
+        if (tpi300 < -6 && s < 10) m |= PROBLEM_BITS.frost;
+        if (s >= 18 && asp >= 135 && asp <= 270 && tpi150 > 0) m |= PROBLEM_BITS.trocken;
+        if (twi > 9.3 && s < 10) m |= PROBLEM_BITS.feucht;
+        if (tpi300 > 6 && H[k] > minH + 0.55 * (maxH - minH)) m |= PROBLEM_BITS.wind;
+        PROBLEM[k] = m;
+      }
+  }
+  function problemStats(zoneKey) {
+    const out = {};
+    let total = 0;
+    for (const p of Object.keys(PROBLEMS)) out[p] = 0;
+    for (let k = 0; k < N * N; k++) {
+      if (ZONE[k] === 'ort') continue;
+      if (zoneKey && ZONE[k] !== zoneKey) continue;
+      total++;
+      for (const [p, bit] of Object.entries(PROBLEM_BITS)) if (PROBLEM[k] & bit) out[p]++;
+    }
+    return Object.values(PROBLEMS).map((p) => ({
+      ...p,
+      share: total ? out[p.key] / total : 0,
+      ha: (out[p.key] * CELL * CELL) / 10000,
+    }));
+  }
+
   // ---- Weg des Wassers durch das Leit-/Muldensystem (für die blauen Linien) ----
   // Von oben am Hang aus: im Steilgürtel quer geleitet, darunter hangabwärts von Wall zu Wall.
   // An jedem Wall steht eine Mulde; die erste nimmt das Wasser auf, danach zeigt die Linie
@@ -353,7 +412,7 @@
     synthetic: false,
     SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
-    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS,
+    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
     heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, waterPaths, zoneStats, contours, profile, bestProfileDir,
     minH, maxH,
   };

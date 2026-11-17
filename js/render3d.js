@@ -22,7 +22,9 @@
       this.highlight = null; // Zonen-Key
       this.showConcept = false; // Keylines, Wälle, Mulden, Rinnen, Becken (Konzept Melissa)
       this.showLabels = false; // Beschriftung der Bausteine
-      this.showPaths = true; // Weg des Wassers (blaue Linien), wenn das Konzept sichtbar ist
+      this.showPaths = false; // Weg des Wassers (blaue Linien) – zurzeit aus
+      this.problems = new Set(['frost', 'trocken', 'feucht', 'wind']); // sichtbare Problemzonen
+      this.problemHighlight = null;
       this.onOverlay = null;
       this.onPick = null;
       this.contours = terrain.contours(10);
@@ -207,7 +209,7 @@
 
       // Zonen als Punktraster
       if (mode !== 'hoehen') {
-        const dim = this.showConcept ? 0.28 : mode === 'sim' ? 0.35 : 1;
+        const dim = mode === 'probleme' ? 0.22 : this.showConcept ? 0.28 : mode === 'sim' ? 0.35 : 1;
         for (let n = 0; n < N * N; n++) {
           const z = t.ZONE[n];
           const on = !this.highlight || z === this.highlight;
@@ -220,6 +222,7 @@
         ctx.globalAlpha = 1;
       }
 
+      if (mode === 'probleme') this._drawProblems(ctx);
       if (this.showConcept) this._drawConcept(ctx);
 
       // Höhenlinien
@@ -412,6 +415,24 @@
       if (this.showLabels) this._drawLabels(ctx);
     }
 
+    _drawProblems(ctx) {
+      const t = this.t;
+      const keys = Object.keys(t.PROBLEMS).filter((k) => this.problems.has(k) && (!this.problemHighlight || this.problemHighlight === k));
+      const offs = { frost: [-1.6, -1.6], trocken: [1.6, -1.6], feucht: [-1.6, 1.6], wind: [1.6, 1.6] };
+      for (const key of keys) {
+        const bit = t.PROBLEM_BITS[key];
+        ctx.fillStyle = t.PROBLEMS[key].color;
+        ctx.globalAlpha = 0.8;
+        const [ox, oy] = offs[key];
+        for (let k = 0; k < t.N * t.N; k++) {
+          if (!(t.PROBLEM[k] & bit)) continue;
+          const p = this.P[k];
+          ctx.fillRect(p[0] + ox - 1.1, p[1] + oy - 1.1, 2.2, 2.2);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
     _drawPaths(ctx) {
       const t = this.t;
       const paths = t.waterPaths();
@@ -493,7 +514,7 @@
         ['Querriegel (Strich) · Überlauf mit Steinen (grau)', at(mittel), [-60, 64]],
       ];
       if (t.BECKEN.length) list.push(['Becken am Hangfuß', [t.BECKEN[0].x, t.BECKEN[0].y], [20, 30]]);
-      const wp = t.waterPaths();
+      const wp = this.showPaths ? t.waterPaths() : [];
       if (wp.length) {
         const p0 = wp[0].pts[Math.floor(wp[0].pts.length * 0.35)];
         list.push(['Weg des Wassers: geleitet, gebremst, versickert', [p0[0], p0[1]], [40, 30]]);

@@ -97,6 +97,32 @@
       })
     );
     $$('.view-analyse [data-view3d]').forEach((b) => b.addEventListener('click', () => v.setView(b.dataset.view3d)));
+    // Problemzonen
+    const setMode = (m) => {
+      v.mode = m;
+      $$('.view-analyse [data-mode]').forEach((x) => x.classList.toggle('active', x.dataset.mode === m));
+    };
+    $('#problems').innerHTML = T.problemStats()
+      .map(
+        (p) => `<li data-problem="${p.key}">
+          <span class="sw" style="background:${p.color}"></span>
+          <span><span class="nm">${p.name}</span><br><span class="ds">${p.why}</span></span>
+          <span class="pc">${Math.round(p.share * 100)} %<small>${p.ha.toFixed(1)} ha</small></span>
+        </li>`
+      )
+      .join('');
+    $$('#problems li').forEach((li) => {
+      const key = li.dataset.problem;
+      li.addEventListener('click', () => {
+        if (v.mode !== 'probleme') setMode('probleme');
+        else if (v.problems.has(key)) v.problems.delete(key);
+        else v.problems.add(key);
+        $$('#problems li').forEach((x) => x.classList.toggle('off', !v.problems.has(x.dataset.problem)));
+        v.invalidate();
+      });
+      li.addEventListener('mouseenter', () => { if (v.mode === 'probleme') { v.problemHighlight = key; v.invalidate(); } });
+      li.addEventListener('mouseleave', () => { v.problemHighlight = null; v.invalidate(); });
+    });
     bindToggles('.view-analyse', v);
   }
 
@@ -214,6 +240,16 @@
     const groups = Object.entries(c.plants)
       .map(([g, list]) => `<div class="group">${g}</div><div class="chips dark">${list.map((p) => `<span class="chip">${p}</span>`).join('')}</div>`)
       .join('');
+    const probs =
+      key === 'ort'
+        ? ''
+        : (() => {
+            const list = T.problemStats(key).filter((p) => p.share >= 0.05);
+            if (!list.length) return '';
+            return `<div class="group">Problemzonen hier</div><div class="probs">${list
+              .map((p) => `<div class="prob" style="border-color:${p.color}"><b>${p.name} · ${Math.round(p.share * 100)} % der Zone</b>${WB.content.problemMeasures[p.key]}</div>`)
+              .join('')}</div>`;
+          })();
     $('#zone-detail').innerHTML = `
       <p class="eyebrow">04 · Empfehlung</p>
       <h2>${z.name}</h2>
@@ -221,6 +257,7 @@
       <p>${c.idea}</p>
       <ul class="measures">${c.measures.map((m) => `<li>${m}</li>`).join('')}</ul>
       ${groups}
+      ${probs}
       ${c.open ? `<div class="open">${c.open}</div>` : ''}`;
   }
 
