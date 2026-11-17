@@ -41,10 +41,10 @@
         const light = Math.max(0, nx * lx + ny * ly + nz * lz);
         // eben = kleiner Punkt, vom Licht abgewandt = großer Punkt
         let dark = Math.min(1, Math.max(0, (lz - light) * 2.4 + 0.12));
-        // Höhenlinien alle 10 m betonen
+        // Höhenlinien alle 20 m leicht betonen
         const z = T.heightAt(x, y);
-        const m = Math.abs(((z % 10) + 10) % 10 - 5) / 5; // 1 = auf der Linie
-        if (m > 0.86) dark = Math.max(dark, 0.55);
+        const m = Math.abs(((z % 20) + 20) % 20 - 10) / 10; // 1 = auf der 20-m-Linie
+        if (m > 0.93) dark = Math.max(dark, 0.42);
         const rad = Math.max(0.5, Math.min(gap * 0.48, dark * gap * 0.5));
         ctx.fillStyle = opts.color || '#111';
         ctx.beginPath();

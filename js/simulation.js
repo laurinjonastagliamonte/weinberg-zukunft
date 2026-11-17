@@ -104,7 +104,7 @@
       this.time += dt;
       // Regen
       if (this.raining) {
-        const n = PARAMS.rainRate * this.factor * dt;
+        const n = PARAMS.rainRate * (this.L / 640) * this.factor * dt;
         let count = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0);
         for (let k = 0; k < count; k++) {
           this.parts.push({ s: Math.random() * this.L, fall: 1 });

@@ -59,7 +59,7 @@
   // ---------- 02 Analyse ----------
   function initAnalyse() {
     $('#mountain-name').textContent = T.name;
-    $('#mountain-place').textContent = `${T.place} · Gipfel ${Math.round(T.TOP)} m · Ausschnitt 1 × 1 km`;
+    $('#mountain-place').textContent = `${T.place} · Gipfel ${Math.round(T.TOP)} m · Ausschnitt ${T.SIZE / 1000} × ${T.SIZE / 1000} km`;
     if (!mountain3d) {
       mountain3d = new WB.Mountain3D($('#mountain'), T);
       const stats = T.zoneStats();
@@ -96,7 +96,11 @@
   let last = 0;
   function initSim() {
     if (!sim) {
-      sim = new WB.WaterModel(T.profile(1));
+      const dir = T.bestProfileDir();
+      const names = ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'];
+      const prof = T.profile(1, dir);
+      $('#profile-desc').textContent = `Hangprofil vom Gipfel nach ${names[Math.round(dir / 45) % 8]}, ${(prof[prof.length - 1].s / 1000).toFixed(1).replace('.', ',')} km lang, ${Math.round(prof[0].z - prof[prof.length - 1].z)} m Höhenunterschied.`;
+      sim = new WB.WaterModel(prof);
       simView = new WB.WaterView($('#profile'), sim, T);
       $$('#variant button').forEach((b) =>
         b.addEventListener('click', () => {
@@ -176,7 +180,7 @@
       ['Fläche Ausschnitt', `${total.toFixed(0)} ha`],
       ['Fläche zum Versickern', `${vers.toFixed(0)} ha`],
       ['Grenze Leiten / Versickern', '30 %'],
-      ['Datenbasis', 'Beispielgelände'],
+      ['Datenbasis', 'STL-Modell 1:13333'],
     ]
       .map(([a, b]) => `<li><span>${a}</span><strong>${b}</strong></li>`)
       .join('');

@@ -13,7 +13,7 @@
       this.yaw = -0.55;
       this.pitch = 0.62;
       this.zoom = 1;
-      this.exag = 1.8;
+      this.exag = 2.2;
       this.mode = 'zonen'; // 'zonen' | 'hoehen'
       this.highlight = null; // Zonen-Key
       this.contours = terrain.contours(10);
@@ -82,8 +82,8 @@
       const cp = Math.cos(this.pitch);
       const screenY = yr * sp - Z * cp;
       const depth = yr * cp + Z * sp;
-      const f = 1 / (1 - depth / 2600);
-      const scale = (this.zoom * Math.min(this.w, this.h)) / 1250;
+      const f = 1 / (1 - depth / (t.SIZE * 2.6));
+      const scale = (this.zoom * Math.min(this.w, this.h)) / (t.SIZE * 1.25);
       const cx = this.w > 1000 ? this.w * 0.4 : this.w / 2;
       return [cx + xr * f * scale, this.h * 0.52 + screenY * f * scale, depth];
     }
@@ -153,7 +153,7 @@
           if (this.highlight && z !== this.highlight) continue;
           const p = P[n];
           ctx.fillStyle = t.ZONES[z].color;
-          const r = 1.1 + Math.max(0, p[2]) / 900;
+          const r = 0.9 + Math.max(0, p[2]) / (t.SIZE * 1.1);
           ctx.fillRect(p[0] - r, p[1] - r, r * 2, r * 2);
         }
       }
