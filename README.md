@@ -7,8 +7,8 @@ Die Seite folgt dem Flowchart im FigJam-Board „Produktgestaltung WS 26/27“ (
 
 1. **Berg wählen** – Suche, Draufsicht als Punktraster
 2. **Analyse** – 3D-Drahtgitter des Bergs, Zonen nach Hangneigung, Höhenlinien
-3. **Simulation** – Regen im Hangprofil: heute vs. mit Wall-Mulde-System, Zeitraum, Wallbruch
-4. **Empfehlung** – Maßnahmen und Pflanzen je Zone, Baukasten Wall & Mulde, Steckbrief
+3. **Simulation** – Regen direkt auf dem 3D-Modell: heute vs. mit Wall-Mulde-System, Zeitraum, Wallbruch
+4. **Empfehlung** – Zone auf dem 3D-Modell anklicken: Maßnahmen und Pflanzen, dazu Baukasten Wall & Mulde und Steckbrief
 
 ## Öffnen
 
@@ -25,9 +25,9 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | `js/korber-kopf-data.js` | Höhenraster Korber Kopf (aus dem STL-Modell) |
 | `js/terrain.js` | Neigung, Fließwege, Zonen, Höhenlinien, Profil |
 | `js/data.js` | Inhalte aus dem Konzept: Maßnahmen und Pflanzen je Zone |
-| `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek) |
+| `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek), Drehen, Zoomen, Zone anklicken |
 | `js/dotmap.js` | Draufsicht als Punktraster |
-| `js/simulation.js` | Wassersimulation (Modell + Darstellung) |
+| `js/sim3d.js` | Wassersimulation auf dem 3D-Gelände (Modell + Darstellung) |
 | `js/main.js` | Ablauf und Navigation |
 
 ## Wichtig: Platzhalter
@@ -36,7 +36,7 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
   und an den Kachel-Höhendaten (`korber_kopf_daten/mosaic.npy`) ausgerichtet (mittlere Abweichung unter 1 m).
   Daten in `js/korber-kopf-data.js`. Für weitere Berge eine neue Datendatei im gleichen Format anlegen.
 - **Simulation:** vereinfachtes Modell zum Zeigen des Prinzips, keine hydrologische Berechnung.
-  Parameter stehen oben in `js/simulation.js`.
+  Parameter stehen oben in `js/sim3d.js`.
 - **Zeitraum:** ändert nur die Regenstärke (`rainFactor` in `js/data.js`), Annahme bis Klimadaten vorliegen.
 - **Wetter je Jahreszeit** und **Robotik-Empfehlung** sind noch leer.
 
