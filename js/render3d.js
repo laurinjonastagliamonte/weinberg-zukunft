@@ -345,46 +345,52 @@
         ctx.beginPath();
         for (const l of kl.mulden) for (const [a, b] of l.segments) this._seg(ctx, a, b, l.level + lift);
         ctx.stroke();
-        // Wall aus dem Aushub
+        // Damm aus dem Aushub, mit versetzten Öffnungen (alle 100 m, von Damm zu Damm um 50 m versetzt)
+        const doors = [];
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.lineWidth = wide ? 1.4 : 1;
         ctx.beginPath();
-        for (const l of kl.walls) for (const [a, b] of l.segments) this._seg(ctx, a, b, l.level + lift + 0.4);
-        ctx.stroke();
-        // Reben auf dem Wall, Querriegel und Überlauf
-        const cham = 10 * t.VIS; // eine Kammer = 10 m
         for (const l of kl.walls) {
-          const used = new Set();
+          const line = Math.round(l.level / kl.dh);
           for (const [a, b] of l.segments) {
             const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
-            const z = l.level + lift + 0.4;
-            const p = this.project(mx, my, z);
-            if ((a[0] * 7 + a[1] * 3) % 3 < 1.2) {
-              ctx.fillStyle = 'rgba(255,255,255,0.95)';
-              ctx.fillRect(p[0] - 0.9, p[1] - 2.2, 1.8, 1.8); // Rebe
-            }
-            const key = Math.floor(mx / cham) + ':' + Math.floor(my / cham);
-            if (used.has(key)) continue;
-            used.add(key);
-            // Querriegel: kurzer Strich quer zum Wall, hangaufwärts durch die Mulde
-            const sx = b[0] - a[0], sy = b[1] - a[1];
-            const sl = Math.hypot(sx, sy) || 1;
-            const nx = -sy / sl, ny = sx / sl;
-            const up = t.heightAt(mx + nx * 4, my + ny * 4) > t.heightAt(mx - nx * 4, my - ny * 4) ? 1 : -1;
-            const q0 = this.project(mx, my, z);
-            const q1 = this.project(mx + nx * up * (wide ? 12 : 8), my + ny * up * (wide ? 12 : 8), z + 1);
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 1.8;
-            ctx.beginPath();
-            ctx.moveTo(q0[0], q0[1]);
-            ctx.lineTo(q1[0], q1[1]);
-            ctx.stroke();
-            // Überlauf mit Steinen: in der Mitte der Kammer
-            const o = this.project(mx + (sx / sl) * cham * 0.5, my + (sy / sl) * cham * 0.5, z);
-            ctx.fillStyle = 'rgba(180,180,180,0.95)';
-            ctx.fillRect(o[0] - 1.6, o[1] - 1.6, 3.2, 3.2);
+            if (t.opening(mx, my, line).open) { doors.push([a, b, l.level]); continue; }
+            this._seg(ctx, a, b, l.level + lift + 0.4);
           }
         }
+        ctx.stroke();
+        // Öffnungen: Lücke im Damm (blau markiert) mit kurzen Wangen hangabwärts wie in der Skizze
+        ctx.fillStyle = '#9FE0FF';
+        for (const [a, b, lvl] of doors) {
+          const p = this.project((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, lvl + lift + 0.4);
+          ctx.fillRect(p[0] - 1.6, p[1] - 1.6, 3.2, 3.2);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (const [a, b, lvl] of doors) {
+          for (const q of [a, b]) {
+            const e = 4;
+            const gx = (t.heightAt(q[0] + e, q[1]) - t.heightAt(q[0] - e, q[1])) / (2 * e);
+            const gy = (t.heightAt(q[0], q[1] + e) - t.heightAt(q[0], q[1] - e)) / (2 * e);
+            const g = Math.hypot(gx, gy) || 1;
+            const len = wide ? 12 : 9;
+            const end = [q[0] - (gx / g) * len, q[1] - (gy / g) * len];
+            const p0 = this.project(q[0], q[1], lvl + lift + 0.4);
+            const p1 = this.project(end[0], end[1], t.heightAt(end[0], end[1]) + lift);
+            ctx.moveTo(p0[0], p0[1]);
+            ctx.lineTo(p1[0], p1[1]);
+          }
+        }
+        ctx.stroke();
+        // Reben auf dem Damm
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        for (const l of kl.walls)
+          for (const [a, b] of l.segments) {
+            if ((a[0] * 7 + a[1] * 3) % 3 >= 1.2) continue;
+            const p = this.project((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, l.level + lift + 0.4);
+            ctx.fillRect(p[0] - 0.9, p[1] - 2.2, 1.8, 1.8);
+          }
         // einzelne Bäume (Mandel, Feige, Maulbeere) im Mittelhang
         if (kl.zone === 'mittel') {
           ctx.strokeStyle = 'rgba(255,255,255,0.7)';
@@ -510,8 +516,8 @@
       const list = [
         ['Schwammkuppe: Wald von innen nach außen', [t.SUMMIT.x, t.SUMMIT.y], [-40, -40]],
         ['Steilgürtel: enge Rinnen leiten das Wasser quer', at(steil), [40, -50]],
-        ['Wall mit Reben · Mulde dahinter', at(mittel), [-60, 40]],
-        ['Querriegel (Strich) · Überlauf mit Steinen (grau)', at(mittel), [-60, 64]],
+        ['Damm mit Reben · Mulde dahinter', at(mittel), [-60, 40]],
+        ['Öffnungen versetzt: Wasser läuft im Zickzack', at(mittel), [-60, 64]],
       ];
       if (t.BECKEN.length) list.push(['Becken am Hangfuß', [t.BECKEN[0].x, t.BECKEN[0].y], [20, 30]]);
       const wp = this.showPaths ? t.waterPaths() : [];

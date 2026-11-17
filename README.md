@@ -78,3 +78,10 @@ Aus der Geländelage abgeleitet, keine Messdaten (in `js/terrain.js`):
 | Wind | exponierter Rücken: 6 m über der Umgebung, obere Hanglage |
 
 Maßnahmen je Problem stehen in `js/data.js` → `problemMeasures` und erscheinen in der Empfehlung je Zone.
+
+## Muldengraben mit versetzten Öffnungen (Skizze 17.11.)
+
+Jeder Damm hat alle **100 m eine Öffnung**, beim nächsten Damm ist sie um **50 m versetzt**
+(`OPENING` in `js/terrain.js`). In der Simulation läuft das Wasser in der Mulde seitlich bis zur
+nächsten Öffnung, fällt eine Stufe tiefer und läuft wieder seitlich – ein eckiger Zickzack, der das
+Wasser bremst. Die helle Spur hinter jedem Tropfen zeigt diesen Weg.

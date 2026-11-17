@@ -194,7 +194,7 @@
     const items = [
       ['Regen', s.regen ? s.regen : '–', 'Wasserpakete', '#5C7CFF', 1],
       ['Versickert', pct(s.versickert), 'im Boden', '#A8A8A8', s.versickert / r],
-      ['In Mulden', pct(sim.stored()), 'versickert gerade', '#2433F0', sim.stored() / r],
+      ['In Mulden', pct(sim.stored()), 'läuft langsam zur Öffnung', '#9FE0FF', sim.stored() / r],
       ['Geleitet', pct(s.geleitet), 'über Rinnen', '#9FE0FF', s.geleitet / r],
       ['Richtung Ort', pct(s.ort), 'abgeflossen', '#E5402A', s.ort / r],
     ];

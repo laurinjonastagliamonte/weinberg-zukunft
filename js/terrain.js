@@ -29,6 +29,12 @@
   };
   const VIS = KEYLINE.mittel.vis / KEYLINE.mittel.spacing; // nur für Kammerlänge (Querriegel)
 
+  // ---- Muldengraben mit versetzten Öffnungen (Skizze Laurin) ----
+  // Jeder Damm hat alle 100 m eine Öffnung; von Damm zu Damm sind die Öffnungen um 50 m versetzt.
+  // Wasser läuft in der Mulde seitlich bis zur nächsten Öffnung, fällt eine Stufe tiefer und
+  // läuft wieder seitlich – ein eckiger Zickzack, der das Wasser bremst.
+  const OPENING = { spacing: 100, shift: 50, gap: 14 };
+
   // ---- Höhenraster dekodieren ----
   const N = D.n;
   const SIZE = D.size;
@@ -374,6 +380,33 @@
       }
   }
 
+  // Lage entlang eines Damms: Bogenlänge um den Gipfel (m). `line` = Nummer des Damms.
+  function alongS(x, y) {
+    const dx = x - SUMMIT.x, dy = y - SUMMIT.y;
+    return Math.atan2(dy, dx) * Math.hypot(dx, dy);
+  }
+  // Öffnung am Damm? und in welche Richtung (+1 / -1 entlang s) liegt die nächste
+  function opening(x, y, line) {
+    const off = ((line % 2) + 2) % 2 * OPENING.shift;
+    const s = alongS(x, y);
+    const d = ((s - off) % OPENING.spacing + OPENING.spacing) % OPENING.spacing; // 0..100
+    const dist = Math.min(d, OPENING.spacing - d);
+    return { open: dist < OPENING.gap / 2, dir: d > OPENING.spacing / 2 ? 1 : -1, dist };
+  }
+  // Richtung entlang des Damms (Höhenlinie), so dass s in Richtung `sign` wächst
+  function alongDir(x, y, gx, gy, sign) {
+    const dx = x - SUMMIT.x, dy = y - SUMMIT.y;
+    const r = Math.hypot(dx, dy) || 1;
+    let tx = -dy / r, ty = dx / r; // Richtung wachsendes s (Winkel)
+    const g = Math.hypot(gx, gy) || 1;
+    const nx = gx / g, ny = gy / g;
+    const dot = tx * nx + ty * ny; // Anteil hangauf/-ab entfernen
+    tx -= dot * nx;
+    ty -= dot * ny;
+    const l = Math.hypot(tx, ty) || 1;
+    return [(tx / l) * sign, (ty / l) * sign];
+  }
+
   // ---- Hangprofil vom Gipfel aus in eine Richtung (Grad, 0 = Nord, 180 = Süd) ----
   function profile(stepM, dirDeg) {
     const r = (dirDeg * Math.PI) / 180;
@@ -412,7 +445,7 @@
     synthetic: false,
     SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
-    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
+    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS, OPENING, alongS, opening, alongDir, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
     heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, waterPaths, zoneStats, contours, profile, bestProfileDir,
     minH, maxH,
   };

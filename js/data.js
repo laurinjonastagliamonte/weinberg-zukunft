@@ -25,10 +25,10 @@
       },
       mittel: {
         idea: 'Wasser bremsen und versickern lassen. Erdwellen, Reben auf den Kronen der Wälle.',
-        measures: ['Versickerungsmulden alle 5 m', 'Mulde 1 m breit', 'Wall aus dem Aushub, 30–40 cm hoch'],
+        measures: ['Muldengraben: Dämme quer zum Hang, Mulde dahinter', 'Öffnung alle 100 m, von Damm zu Damm versetzt', 'Wasser läuft im Zickzack, wird langsam und versickert'],
         plants: {
           'Wall': ['Reben alle 3 m', 'Thymian', 'Dost'],
-          'Querriegel': ['Kornelkirsche', 'Felsenbirne'],
+          'An den Öffnungen': ['Kornelkirsche', 'Felsenbirne'],
           'Muldenrand': ['Seggen', 'Rasen-Schmiele'],
           'Flacher Rand': ['Minze', 'Barbarakraut'],
           'Böschung': ['Luzerne', 'Esparsette', 'Hornklee', 'Feldsalat'],
@@ -37,9 +37,9 @@
       },
       auslauf: {
         idea: 'Im Auslauf des Bergs soll das Wasser gut versickern. Breite Mulden, Becken am Hangfuß.',
-        measures: ['Versickerungsmulden alle 8 m', 'Mulde 1,5 m breit', 'Becken am Hangfuß'],
+        measures: ['Muldengraben mit weiterem Abstand, Mulde 1,5 m breit', 'Öffnungen alle 100 m, versetzt', 'Becken am Hangfuß'],
         plants: {
-          'Wall, Querriegel, Mulde': ['wie Mittelhang'],
+          'Damm, Öffnungen, Mulde': ['wie Mittelhang'],
           'Bäume am Hangfuß': ['Walnuss', 'Quitte', 'Mispel'],
         },
       },
@@ -60,8 +60,7 @@
     toolkit: [
       ['Versickerungsmulde', '1 m breit, 10 m lang, hält kurz bis 30 cm Wasser, bis es versickert'],
       ['Wall', 'aus dem Aushub, 30–40 cm hoch'],
-      ['Querriegel', 'an beiden Enden der Mulde'],
-      ['Überlauf', 'mit Steinen gesichert'],
+      ['Öffnung im Damm', 'alle 100 m, beim nächsten Damm um 50 m versetzt – das Wasser läuft im Zickzack'],
       ['Steinpackung', 'wo Wasser von oben ankommt'],
       ['Schluckstreifen', 'Speierling, Mandel'],
     ],
