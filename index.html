@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klimafester Weinberg – Prototyp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>Klimafester Weinberg</span>
+      <span class="brand-sub">Prototyp v1</span>
+    </div>
+    <nav class="steps" aria-label="Schritte">
+      <button data-step="1" class="active"><span>01</span>Berg wählen</button>
+      <button data-step="2"><span>02</span>Analyse</button>
+      <button data-step="3"><span>03</span>Simulation</button>
+      <button data-step="4"><span>04</span>Empfehlung</button>
+    </nav>
+  </header>
+
+  <!-- 01 Berg wählen -->
+  <section class="view view-search active" data-view="1">
+    <canvas class="dotmap" id="dotmap"></canvas>
+    <div class="search-panel glass">
+      <p class="eyebrow">01 · Berg wählen</p>
+      <h1>Welcher Berg soll<br />klimafest werden?</h1>
+      <p class="lead">Wähle einen Weinberg. Das Tool teilt ihn nach Hangneigung in Zonen ein, simuliert das Wasser und empfiehlt Wälle, Mulden und Pflanzen.</p>
+      <div class="search">
+        <input id="search" type="text" placeholder="Name oder Ort, z. B. Korber Kopf" autocomplete="off" />
+      </div>
+      <ul class="suggestions" id="suggestions">
+        <li data-mountain="korber-kopf" class="sugg">
+          <strong>Korber Kopf</strong><span>Korb, Rems-Murr-Kreis · Beispielgelände</span>
+        </li>
+        <li class="sugg disabled"><strong>Weitere Berge</strong><span>folgen mit echtem Geländemodell (DGM)</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 02 Analyse -->
+  <section class="view view-analyse dark" data-view="2">
+    <canvas class="mountain" id="mountain"></canvas>
+    <div class="toolbar glass-dark">
+      <button data-mode="zonen" class="active">Zonen</button>
+      <button data-mode="hoehen">Höhenlinien</button>
+      <button data-view3d="draufsicht">Draufsicht</button>
+      <button data-view3d="schraeg">3D</button>
+    </div>
+    <aside class="side glass-dark">
+      <p class="eyebrow">02 · Analyse</p>
+      <h2 id="mountain-name">Korber Kopf</h2>
+      <p class="muted" id="mountain-place"></p>
+      <p class="note">Beispielgelände, keine echten Höhendaten. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).</p>
+      <h3>Zonen nach Neigung</h3>
+      <ul class="zones" id="zones"></ul>
+      <h3>Wetter je Jahreszeit</h3>
+      <div class="seasons">
+        <div><strong>Frühling</strong><span>Daten folgen</span></div>
+        <div><strong>Sommer</strong><span>Daten folgen</span></div>
+        <div><strong>Herbst</strong><span>Daten folgen</span></div>
+        <div><strong>Winter</strong><span>Daten folgen</span></div>
+      </div>
+      <button class="cta" data-goto="3">Weiter zur Simulation →</button>
+    </aside>
+  </section>
+
+  <!-- 03 Simulation -->
+  <section class="view view-sim dark" data-view="3">
+    <div class="sim-head">
+      <div>
+        <p class="eyebrow">03 · Simulation Wassermanagement</p>
+        <h2>Was passiert mit dem Regen?</h2>
+        <p class="muted">Hangprofil vom Gipfel nach Süden. Vereinfachtes Modell zum Zeigen des Prinzips, keine hydrologische Berechnung.</p>
+      </div>
+      <div class="sim-controls">
+        <div class="seg" id="variant">
+          <button data-variant="heute">Heute</button>
+          <button data-variant="konzept" class="active">Mit Wall-Mulde-System</button>
+        </div>
+        <label class="select">Zeitraum
+          <select id="period">
+            <option value="heute">heute</option>
+            <option value="2050">2050</option>
+            <option value="2075">2075</option>
+            <option value="2125">2125</option>
+          </select>
+        </label>
+        <button class="btn primary" id="rain">Regen starten</button>
+        <button class="btn" id="break">Wallbruch auslösen</button>
+        <button class="btn ghost" id="reset">Zurücksetzen</button>
+      </div>
+    </div>
+    <canvas class="profile" id="profile"></canvas>
+    <div class="stats" id="stats"></div>
+    <p class="note small">Zeitraum ändert nur die Regenstärke (Annahme als Platzhalter, bitte durch Klimadaten ersetzen).</p>
+    <div class="sim-foot"><button class="cta" data-goto="4">Weiter zur Empfehlung →</button></div>
+  </section>
+
+  <!-- 04 Empfehlung -->
+  <section class="view view-reco" data-view="4">
+    <div class="reco-head">
+      <p class="eyebrow">04 · Empfehlung &amp; Ergebnis</p>
+      <h2>Bepflanzung und Maßnahmen je Zone</h2>
+      <p class="lead">Wälle und Mulden statt Trockenmauern. Oben Wasser leiten, unten versickern lassen.</p>
+    </div>
+    <div class="reco-grid" id="reco"></div>
+    <div class="reco-bottom">
+      <div class="card">
+        <h3>Baukasten Wall &amp; Mulde</h3>
+        <ol class="toolkit" id="toolkit"></ol>
+      </div>
+      <div class="card">
+        <h3>Robotik-Empfehlung</h3>
+        <p class="muted">Folgt aus eurer Robotik-Analyse: welcher Roboter für welche Zone und Aufgabe.</p>
+      </div>
+      <div class="card">
+        <h3>Weinberg-Steckbrief</h3>
+        <ul class="facts" id="facts"></ul>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/terrain.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/dotmap.js"></script>
+  <script src="js/render3d.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
