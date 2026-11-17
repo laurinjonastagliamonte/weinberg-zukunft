@@ -35,8 +35,7 @@ button, input, select { font: inherit; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: -0.02em; font-size: 21px; }
 .topbar.on-dark { background: rgba(14, 14, 14, 0.72); border-bottom-color: rgba(255, 255, 255, 0.1); color: #fff; }
 .topbar.on-dark .steps button.active { background: #fff; color: var(--ink); }
-.brand-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--gelb); outline: 2px solid var(--ink); }
-.topbar.on-dark .brand-dot { outline-color: #fff; }
+.brand-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--blau); }
 .brand-sub { font-weight: 400; color: var(--grau); font-size: 13px; }
 .steps { display: flex; gap: 4px; }
 .steps button {
@@ -188,9 +187,11 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: 
 .topbar.on-cover .steps { display: none; }
 .view-cover { background: #fff; overflow: hidden; padding-top: 0; }
 .view-cover .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
-.cover { position: relative; height: 100vh; min-height: 640px; display: flex; flex-direction: column; align-items: center; padding: calc(var(--topbar) + 4vh) 24px 40px; text-align: center; }
+.cover { position: relative; height: 100vh; min-height: 640px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: var(--topbar) 6vw 40px; text-align: left; pointer-events: none; }
+.cover > * { pointer-events: auto; }
+.cover-caption { position: absolute; right: 28px; bottom: 22px; margin: 0; font-size: 12px; letter-spacing: 0.06em; color: #333; z-index: 1; background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius: 999px; }
 .cover-eyebrow { font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #555; margin: 0 0 18px; }
-.cover-title { font-size: clamp(44px, 7vw, 112px); line-height: 0.95; letter-spacing: -0.045em; font-weight: 600; margin: 0 0 36px; }
+.cover-title { max-width: 9.5em; font-size: clamp(44px, 6.6vw, 104px); line-height: 0.95; letter-spacing: -0.045em; font-weight: 600; margin: 0 0 36px; }
 .glass-pill {
   position: relative; display: flex; align-items: center; gap: 6px; padding: 6px;
   background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(17, 17, 17, 0.12);

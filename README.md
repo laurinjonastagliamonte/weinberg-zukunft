@@ -5,7 +5,7 @@ Prototyp der Website für ein klimafestes Bewirtschaftungssystem für Weinberge
 
 Die Seite folgt dem Flowchart im FigJam-Board „Produktgestaltung WS 26/27“ (Section „Website“):
 
-1. **Cover** – „Weinberge zukunftsorientiert denken“, animierte Linienwellen aus Schnitten durch den Korber Kopf, transluzente Karten, Bergsuche
+1. **Cover** – „Weinberge zukunftsorientiert denken“, animierte Draufsicht des Korber Kopfs als Zeichenraster (heute ↔ mit Konzept), Bergsuche
 2. **Analyse** – 3D-Drahtgitter des Bergs, Zonen nach Hangneigung, Höhenlinien
 3. **Simulation** – Regen direkt auf dem 3D-Modell: heute vs. mit Wall-Mulde-System, Zeitraum, Wallbruch
 4. **Empfehlung** – Zone auf dem 3D-Modell anklicken: Maßnahmen und Pflanzen, dazu Baukasten Wall & Mulde und Steckbrief
@@ -26,7 +26,7 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | `js/terrain.js` | Neigung, Fließwege, Zonen, Höhenlinien, Profil |
 | `js/data.js` | Inhalte aus dem Konzept: Maßnahmen und Pflanzen je Zone |
 | `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek), Drehen, Zoomen, Zone anklicken |
-| `js/cover.js` | Animierte Linienwellen der Titelseite |
+| `js/cover.js` | Animierte Draufsicht der Titelseite (Zeichenraster, heute ↔ Konzept) |
 | `js/sim3d.js` | Wassersimulation auf dem 3D-Gelände (Modell + Darstellung) |
 | `js/main.js` | Ablauf und Navigation |
 
