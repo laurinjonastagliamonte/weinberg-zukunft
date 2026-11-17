@@ -83,6 +83,20 @@
       })
     );
     $$('.view-analyse [data-view3d]').forEach((b) => b.addEventListener('click', () => v.setView(b.dataset.view3d)));
+    bindToggles('.view-analyse', v);
+  }
+
+  // Schalter „Konzept“ und „Beschriftung“
+  function bindToggles(scope, v) {
+    $$(`${scope} [data-toggle]`).forEach((b) => {
+      const key = b.dataset.toggle === 'concept' ? 'showConcept' : 'showLabels';
+      b.classList.toggle('on', !!v[key]);
+      b.addEventListener('click', () => {
+        v[key] = !v[key];
+        b.classList.toggle('on', v[key]);
+        v.invalidate();
+      });
+    });
   }
 
   // ---------- 03 Simulation (auf dem 3D-Modell) ----------
@@ -92,14 +106,15 @@
     if (views.sim) { views.sim.resize(); return refresh(); }
     sim = new WB.WaterModel3D(T);
     const v = (views.sim = new WB.Mountain3D($('#sim3d'), T, { mode: 'sim' }));
-    v.showMulden = true;
+    v.showConcept = true;
+    bindToggles('.view-sim', v);
     v.onOverlay = (ctx, view) => WB.drawWater(ctx, view, sim);
     v.invalidate();
     $$('#variant button').forEach((b) =>
       b.addEventListener('click', () => {
         $$('#variant button').forEach((x) => x.classList.toggle('active', x === b));
         sim.setVariant(b.dataset.variant);
-        v.showMulden = sim.variant === 'konzept';
+        v.showConcept = sim.variant === 'konzept';
         $('#break').disabled = sim.variant !== 'konzept';
         v.invalidate();
         refresh();
@@ -140,8 +155,8 @@
       ['Regen', s.regen ? s.regen : '–', 'Wasserpakete', '#5C7CFF', 1],
       ['Versickert', pct(s.versickert), 'im Boden', '#A8A8A8', s.versickert / r],
       ['In Mulden', pct(sim.stored()), 'versickert gerade', '#2433F0', sim.stored() / r],
-      ['Geleitet', pct(s.geleitet), 'über Rinnen', '#FFFFFF', s.geleitet / r],
-      ['Abgeflossen', pct(s.abgeflossen), 'aus dem Ausschnitt', '#E5402A', s.abgeflossen / r],
+      ['Geleitet', pct(s.geleitet), 'über Rinnen', '#9FE0FF', s.geleitet / r],
+      ['Richtung Ort', pct(s.ort), 'abgeflossen', '#E5402A', s.ort / r],
     ];
     $('#stats').innerHTML = items
       .map(([k, v, d, c, f]) => `<div class="stat"><span>${k}</span><b>${v}</b><span>${d}</span><div class="bar" style="background:${c};width:${Math.round(Math.min(1, f) * 100)}%"></div></div>`)
@@ -152,18 +167,20 @@
   function initReco() {
     if (views.reco) return views.reco.resize();
     const v = (views.reco = new WB.Mountain3D($('#reco3d'), T, { mode: 'reco' }));
+    v.showConcept = true;
     v.onPick = (hit) => selectZone(hit.zone);
+    bindToggles('.view-reco', v);
     $('#zone-tabs').innerHTML = stats
       .map((z) => `<button data-zone="${z.key}"><i style="background:${z.color}"></i>${z.name}</button>`)
       .join('');
     $$('#zone-tabs button').forEach((b) => b.addEventListener('click', () => selectZone(b.dataset.zone)));
     $('#toolkit').innerHTML = WB.content.toolkit.map(([a, b]) => `<li><strong>${a}</strong> – ${b}</li>`).join('');
-    const total = stats.reduce((a, z) => a + z.ha, 0);
+    const total = stats.filter((z) => z.key !== 'ort').reduce((a, z) => a + z.ha, 0);
     const vers = stats.filter((z) => z.key === 'mittel' || z.key === 'auslauf').reduce((a, z) => a + z.ha, 0);
     $('#facts').innerHTML = [
       ['Berg', T.name],
       ['Gipfel', `${Math.round(T.TOP)} m`],
-      ['Fläche Ausschnitt', `${total.toFixed(0)} ha`],
+      ['Fläche Hang (ohne Ort)', `${total.toFixed(0)} ha`],
       ['Fläche zum Versickern', `${vers.toFixed(0)} ha`],
       ['Grenze Leiten / Versickern', '30 %'],
       ['Datenbasis', 'STL-Modell 1:13333'],
@@ -179,7 +196,7 @@
     v.invalidate();
     $$('#zone-tabs button').forEach((b) => b.classList.toggle('active', b.dataset.zone === key));
     const z = stats.find((s) => s.key === key);
-    const c = WB.content.zones[key];
+    const c = WB.content.zones[key] || WB.content.ortInfo;
     const groups = Object.entries(c.plants)
       .map(([g, list]) => `<div class="group">${g}</div><div class="chips dark">${list.map((p) => `<span class="chip">${p}</span>`).join('')}</div>`)
       .join('');

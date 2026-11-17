@@ -43,6 +43,7 @@
           'Bäume am Hangfuß': ['Walnuss', 'Quitte', 'Mispel'],
         },
       },
+      ort: null, // siehe ortInfo
       rinne: {
         idea: 'Stufenrinne mit Kopfweiden. Lebende Querriegel aus Weide bremsen das Wasser.',
         measures: ['Stufenrinne', 'Kopfweiden', 'lebende Querriegel aus Weide'],
@@ -52,6 +53,11 @@
           'Sohle': ['Purpurweide', 'Rohrglanzgras', 'Beinwell', 'Schwedenklee'],
         },
       },
+    },
+    ortInfo: {
+      idea: 'Der Ort Korb liegt am Hangfuß. Er ist nicht Teil der Bewirtschaftung, profitiert aber vom Konzept: Weniger Wasser schießt bei Starkregen den Hang hinunter.',
+      measures: ['wird in der Simulation als Ziel des Abflusses gezählt', 'Fläche nur zur Orientierung eingeblendet'],
+      plants: {},
     },
     toolkit: [
       ['Versickerungsmulde', '1 m breit, 10 m lang, hält kurz bis 30 cm Wasser, bis es versickert'],

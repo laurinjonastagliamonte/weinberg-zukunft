@@ -20,7 +20,8 @@
       this.mode = opts.mode || 'zonen'; // 'zonen' | 'hoehen' | 'sim' | 'reco'
       this.centerX = opts.centerX ?? 0.4; // Anteil der Breite (Platz für Panels)
       this.highlight = null; // Zonen-Key
-      this.showMulden = false; // Wälle/Mulden als Linien (Simulation)
+      this.showConcept = false; // Keylines, Wälle, Mulden, Rinnen, Becken (Konzept Melissa)
+      this.showLabels = false; // Beschriftung der Bausteine
       this.onOverlay = null;
       this.onPick = null;
       this.contours = terrain.contours(10);
@@ -205,7 +206,7 @@
 
       // Zonen als Punktraster
       if (mode !== 'hoehen') {
-        const dim = mode === 'sim' ? 0.35 : 1;
+        const dim = this.showConcept ? 0.28 : mode === 'sim' ? 0.35 : 1;
         for (let n = 0; n < N * N; n++) {
           const z = t.ZONE[n];
           const on = !this.highlight || z === this.highlight;
@@ -218,23 +219,7 @@
         ctx.globalAlpha = 1;
       }
 
-      // Wälle und Mulden als feine Linien entlang der Höhe (nur Mittelhang und Auslauf)
-      if (this.showMulden) {
-        if (!this.fine) this.fine = t.contours(4);
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-        ctx.lineWidth = 0.7;
-        ctx.beginPath();
-        for (const c of this.fine)
-          for (const [a, b] of c.segments) {
-            const z = t.zoneAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
-            if (z !== 'mittel' && z !== 'auslauf') continue;
-            const pa = this.project(a[0], a[1], c.level);
-            const pb = this.project(b[0], b[1], c.level);
-            ctx.moveTo(pa[0], pa[1]);
-            ctx.lineTo(pb[0], pb[1]);
-          }
-        ctx.stroke();
-      }
+      if (this.showConcept) this._drawConcept(ctx);
 
       // Höhenlinien
       for (const c of this.contours) {
@@ -242,6 +227,9 @@
         if (mode === 'hoehen') {
           ctx.strokeStyle = major ? 'rgba(241,230,43,0.95)' : 'rgba(255,255,255,0.75)';
           ctx.lineWidth = major ? 1.6 : 0.9;
+        } else if (this.showConcept) {
+          ctx.strokeStyle = major ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0)';
+          ctx.lineWidth = 0.6;
         } else {
           ctx.strokeStyle = major ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.18)';
           ctx.lineWidth = major ? 1 : 0.6;
@@ -277,6 +265,221 @@
       ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
       ctx.fillText('N', n1[0] - 4, n1[1] - 6);
+    }
+
+    // ---------- Konzept Melissa im Gelände ----------
+    _seg(ctx, a, b, z) {
+      const pa = this.project(a[0], a[1], z);
+      const pb = this.project(b[0], b[1], z);
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+    }
+
+    _drawConcept(ctx) {
+      const t = this.t;
+      const K = t.keylines();
+      const lift = 0.6; // Linien minimal über dem Boden
+      const hl = this.highlight;
+      const on = (z) => !hl || hl === z;
+
+      // Kuppe: Wald von innen nach außen (innen große Pionierbäume, außen Büsche)
+      if (on('kuppe')) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 0.8;
+        for (let j = 0; j < t.N; j += 2)
+          for (let i = (j / 2) % 2; i < t.N; i += 2) {
+            const k = j * t.N + i;
+            if (t.ZONE[k] !== 'kuppe') continue;
+            const inner = t.H[k] > t.maxH - 7;
+            const p = this.P[k];
+            ctx.beginPath();
+            ctx.arc(p[0], p[1] - (inner ? 3 : 1.5), inner ? 2.6 : 1.4, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+      }
+
+      for (const kl of K) {
+        if (!on(kl.zone)) continue;
+        if (kl.zone === 'steil') {
+          // Rinnen alle 3,5 m: eng, leiten das Wasser quer zur Muldenlinie
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          for (const l of kl.walls) for (const [a, b] of l.segments) this._seg(ctx, a, b, l.level + lift);
+          ctx.stroke();
+          // Pfeile in Leitrichtung
+          ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (const l of kl.walls)
+            l.segments.forEach(([a, b], n) => {
+              if (n % 9) return;
+              const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+              const e = 4;
+              const gx = (t.heightAt(mx + e, my) - t.heightAt(mx - e, my)) / (2 * e);
+              const gy = (t.heightAt(mx, my + e) - t.heightAt(mx, my - e)) / (2 * e);
+              const [dx, dy] = t.leadDir(mx, my, gx, gy);
+              const z = t.heightAt(mx, my) + lift;
+              const tip = [mx + dx * 9, my + dy * 9];
+              const p0 = this.project(mx - dx * 3, my - dy * 3, z);
+              const p1 = this.project(tip[0], tip[1], z);
+              const w1 = this.project(tip[0] - dx * 4 - dy * 3, tip[1] - dy * 4 + dx * 3, z);
+              const w2 = this.project(tip[0] - dx * 4 + dy * 3, tip[1] - dy * 4 - dx * 3, z);
+              ctx.moveTo(p0[0], p0[1]);
+              ctx.lineTo(p1[0], p1[1]);
+              ctx.lineTo(w1[0], w1[1]);
+              ctx.moveTo(p1[0], p1[1]);
+              ctx.lineTo(w2[0], w2[1]);
+            });
+          ctx.stroke();
+          continue;
+        }
+        const wide = kl.zone === 'auslauf';
+        // Mulde hinter dem Wall (hangaufwärts)
+        ctx.strokeStyle = wide ? 'rgba(61,91,255,0.75)' : 'rgba(61,91,255,0.6)';
+        ctx.lineWidth = wide ? 2.4 : 1.3;
+        ctx.beginPath();
+        for (const l of kl.mulden) for (const [a, b] of l.segments) this._seg(ctx, a, b, l.level + lift);
+        ctx.stroke();
+        // Wall aus dem Aushub
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = wide ? 1.4 : 1;
+        ctx.beginPath();
+        for (const l of kl.walls) for (const [a, b] of l.segments) this._seg(ctx, a, b, l.level + lift + 0.4);
+        ctx.stroke();
+        // Reben auf dem Wall, Querriegel und Überlauf
+        const cham = 10 * t.VIS; // eine Kammer = 10 m
+        for (const l of kl.walls) {
+          const used = new Set();
+          for (const [a, b] of l.segments) {
+            const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+            const z = l.level + lift + 0.4;
+            const p = this.project(mx, my, z);
+            if ((a[0] * 7 + a[1] * 3) % 3 < 1.2) {
+              ctx.fillStyle = 'rgba(255,255,255,0.95)';
+              ctx.fillRect(p[0] - 0.9, p[1] - 2.2, 1.8, 1.8); // Rebe
+            }
+            const key = Math.floor(mx / cham) + ':' + Math.floor(my / cham);
+            if (used.has(key)) continue;
+            used.add(key);
+            // Querriegel: kurzer Strich quer zum Wall, hangaufwärts durch die Mulde
+            const sx = b[0] - a[0], sy = b[1] - a[1];
+            const sl = Math.hypot(sx, sy) || 1;
+            const nx = -sy / sl, ny = sx / sl;
+            const up = t.heightAt(mx + nx * 4, my + ny * 4) > t.heightAt(mx - nx * 4, my - ny * 4) ? 1 : -1;
+            const q0 = this.project(mx, my, z);
+            const q1 = this.project(mx + nx * up * (wide ? 12 : 8), my + ny * up * (wide ? 12 : 8), z + 1);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(q0[0], q0[1]);
+            ctx.lineTo(q1[0], q1[1]);
+            ctx.stroke();
+            // Überlauf mit Steinen: in der Mitte der Kammer
+            const o = this.project(mx + (sx / sl) * cham * 0.5, my + (sy / sl) * cham * 0.5, z);
+            ctx.fillStyle = 'rgba(180,180,180,0.95)';
+            ctx.fillRect(o[0] - 1.6, o[1] - 1.6, 3.2, 3.2);
+          }
+        }
+        // einzelne Bäume (Mandel, Feige, Maulbeere) im Mittelhang
+        if (kl.zone === 'mittel') {
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+          ctx.lineWidth = 0.8;
+          for (let k = 0; k < t.N * t.N; k += 97) {
+            if (t.ZONE[k] !== 'mittel') continue;
+            const p = this.P[k];
+            ctx.beginPath();
+            ctx.arc(p[0], p[1] - 4, 2.4, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Muldenlinie: Stufenrinne mit Kopfweiden
+      if (on('rinne')) {
+        for (let k = 0; k < t.N * t.N; k++) {
+          if (t.ZONE[k] !== 'rinne') continue;
+          const p = this.P[k];
+          ctx.fillStyle = 'rgba(61,91,255,0.8)';
+          ctx.fillRect(p[0] - 1.4, p[1] - 1.4, 2.8, 2.8);
+          const i = k % t.N, j = Math.floor(k / t.N);
+          if ((i * 7 + j * 3) % 13 === 0) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.arc(p[0], p[1] - 3.5, 2.2, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Becken am Hangfuß
+      if (on('auslauf'))
+        for (const b of t.BECKEN) {
+          const p = this.project(b.x, b.y, t.heightAt(b.x, b.y) + lift);
+          ctx.strokeStyle = 'rgba(61,91,255,0.95)';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.ellipse(p[0], p[1], 7, 4, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+      if (this.showLabels) this._drawLabels(ctx);
+    }
+
+    _labelAnchors() {
+      if (this._anchors) return this._anchors;
+      const t = this.t;
+      const N = t.N;
+      let steil = -1, rinne = -1, mittel = -1, ort = [0, 0, 0];
+      for (let k = 0; k < N * N; k++) {
+        const z = t.ZONE[k];
+        const dS = (k2) => Math.hypot((k2 % N) * t.CELL - t.SUMMIT.x, Math.floor(k2 / N) * t.CELL - t.SUMMIT.y);
+        if (z === 'steil' && t.SLOPE[k] > 35 && (steil < 0 || dS(k) < dS(steil))) steil = k;
+        if (z === 'rinne' && (rinne < 0 || t.H[k] > t.H[rinne])) rinne = k;
+        if (z === 'mittel' && (mittel < 0 || t.H[k] > t.H[mittel])) mittel = k;
+        if (z === 'ort') { ort[0] += k % N; ort[1] += Math.floor(k / N); ort[2]++; }
+      }
+      const at = (k) => [(k % N) * t.CELL, Math.floor(k / N) * t.CELL];
+      const list = [
+        ['Schwammkuppe: Wald von innen nach außen', [t.SUMMIT.x, t.SUMMIT.y], [-40, -40]],
+        ['Steilgürtel: Rinnen leiten zur Muldenlinie', at(steil), [40, -50]],
+        ['Muldenlinie: Stufenrinne mit Kopfweiden', at(rinne), [30, 20]],
+        ['Wall mit Reben · Mulde dahinter', at(mittel), [-60, 40]],
+        ['Querriegel (Strich) · Überlauf mit Steinen (grau)', at(mittel), [-60, 64]],
+      ];
+      if (t.BECKEN.length) list.push(['Becken am Hangfuß', [t.BECKEN[0].x, t.BECKEN[0].y], [20, 30]]);
+      if (ort[2]) list.push(['Ort Korb', [(ort[0] / ort[2]) * t.CELL, (ort[1] / ort[2]) * t.CELL], [0, 0]]);
+      this._anchors = list;
+      return list;
+    }
+
+    _drawLabels(ctx) {
+      const t = this.t;
+      ctx.font = '500 12px Inter, "Helvetica Neue", Arial, sans-serif';
+      for (const [text, [x, y], [ox, oy]] of this._labelAnchors()) {
+        const p = this.project(x, y, t.heightAt(x, y));
+        const lx = p[0] + ox, ly = p[1] + oy;
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(p[0], p[1]);
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 2, 0, Math.PI * 2);
+        ctx.fill();
+        const w = ctx.measureText(text).width + 16;
+        ctx.fillStyle = 'rgba(20,20,20,0.9)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.roundRect(lx - (ox < 0 ? w : 0), ly - 11, w, 22, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.fillText(text, lx - (ox < 0 ? w : 0) + 8, ly + 4);
+      }
     }
   }
 

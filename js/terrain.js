@@ -2,7 +2,7 @@
  * Gelände-Modell
  * --------------
  * Lädt das Höhenraster aus js/korber-kopf-data.js (aus eurem STL-Modell) und berechnet:
- * Hangneigung, Hangrichtung, Fließwege (Muldenlinien), Zonen, Höhenlinien und das Hangprofil.
+ * Hangneigung, Hangrichtung, Fließwege (Muldenlinien), Zonen, Höhenlinien, Keylines und das Hangprofil.
  *
  * Koordinaten: x nach Osten, y nach Süden, in Metern.
  */
@@ -18,6 +18,17 @@
     rinneArea: 1.5, // Muldenlinie: ab 1,5 ha Einzugsgebiet sammelt sich das Wasser
   };
 
+  // ---- Keylines nach Konzept Melissa ----
+  // Echte Abstände: Steilgürtel Rinnen alle 3,5 m, Mittelhang Mulden alle 5 m (1 m breit),
+  // Auslauf Mulden alle 8 m (1,5 m breit). Für die Darstellung auf 2 km werden sie
+  // gleichmäßig vergrößert (Faktor VIS), damit man das Muster erkennt.
+  const VIS = 7;
+  const KEYLINE = {
+    steil: { spacing: 3.5, muldeWidth: 0 },
+    mittel: { spacing: 5, muldeWidth: 1 },
+    auslauf: { spacing: 8, muldeWidth: 1.5 },
+  };
+
   // ---- Höhenraster dekodieren ----
   const N = D.n;
   const SIZE = D.size;
@@ -27,6 +38,11 @@
   for (let k = 0; k < N * N; k++) {
     const v = bin.charCodeAt(2 * k) | (bin.charCodeAt(2 * k + 1) << 8);
     H[k] = (D.baseDm + v) / 10;
+  }
+  const TOWN = new Uint8Array(N * N);
+  if (D.town) {
+    const tb = atob(D.town);
+    for (let k = 0; k < N * N; k++) TOWN[k] = (tb.charCodeAt(k >> 3) >> (7 - (k & 7))) & 1;
   }
   const idx = (i, j) => j * N + i;
   const clampI = (v) => Math.min(N - 1, Math.max(0, v));
@@ -92,13 +108,15 @@
     mittel: { key: 'mittel', name: 'Mittelhang', sub: '', range: '18–30 %', water: 'bremsen & versickern', color: '#A8A8A8' },
     auslauf: { key: 'auslauf', name: 'Auslauf & Hangfuß', sub: '', range: 'unter 18 %', water: 'versickern lassen', color: '#5C5C5C' },
     rinne: { key: 'rinne', name: 'Muldenlinie', sub: 'Abflussrinne', range: 'Tiefenlinie', water: 'Stufenrinne mit Kopfweiden', color: '#8C8C8C' },
+    ort: { key: 'ort', name: 'Ort', sub: 'Korb', range: 'bebaut', water: 'wird durch das Konzept geschützt', color: '#2E2E2E' },
   };
-  const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'rinne'];
+  const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'rinne', 'ort'];
 
   const ZONE = new Array(N * N);
   for (let k = 0; k < N * N; k++) {
     const s = SLOPE[k];
-    if (H[k] >= maxH - THRESHOLDS.kuppeDrop && s < THRESHOLDS.mittel) ZONE[k] = 'kuppe';
+    if (TOWN[k]) ZONE[k] = 'ort';
+    else if (H[k] >= maxH - THRESHOLDS.kuppeDrop && s < THRESHOLDS.mittel) ZONE[k] = 'kuppe';
     else if (ACC[k] >= rinneCells) ZONE[k] = 'rinne';
     else if (s >= THRESHOLDS.steil) ZONE[k] = 'steil';
     else if (s >= THRESHOLDS.mittel) ZONE[k] = 'mittel';
@@ -134,9 +152,9 @@
   }
 
   // ---- Höhenlinien (Marching Squares) ----
-  function contours(step) {
+  function contours(step, from) {
     const segs = [];
-    const start = Math.ceil(minH / step) * step;
+    const start = from !== undefined ? from : Math.ceil(minH / step) * step;
     for (let lvl = start; lvl <= maxH; lvl += step) {
       const list = [];
       for (let j = 0; j < N - 1; j++)
@@ -162,6 +180,89 @@
       segs.push({ level: lvl, segments: list });
     }
     return segs;
+  }
+
+  // ---- Keylines je Zone: Höhenabstand so gewählt, dass der Abstand im Gelände passt ----
+  const zoneSlope = {};
+  for (const z of Object.keys(KEYLINE)) {
+    const v = [];
+    for (let k = 0; k < N * N; k++) if (ZONE[k] === z) v.push(SLOPE[k]);
+    v.sort((a, b) => a - b);
+    zoneSlope[z] = (v[Math.floor(v.length / 2)] || 10) / 100;
+  }
+  const KEY_DH = {}; // Höhenabstand der Linien je Zone (m)
+  for (const [z, c] of Object.entries(KEYLINE)) KEY_DH[z] = c.spacing * VIS * zoneSlope[z];
+
+  let keyCache = null;
+  function keylines() {
+    if (keyCache) return keyCache;
+    const out = [];
+    for (const [z, c] of Object.entries(KEYLINE)) {
+      const dh = KEY_DH[z];
+      const walls = contours(dh, Math.ceil(minH / dh) * dh);
+      // Mulde liegt hangaufwärts direkt hinter dem Wall
+      const md = c.muldeWidth ? c.muldeWidth * VIS * 0.6 * zoneSlope[z] : 0;
+      const mulden = md ? contours(dh, Math.ceil(minH / dh) * dh + md) : [];
+      const keep = (list) =>
+        list.map((l) => ({
+          level: l.level,
+          segments: l.segments.filter(([a, b]) => zoneAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) === z),
+        }));
+      out.push({ zone: z, dh, walls: keep(walls), mulden: keep(mulden) });
+    }
+    keyCache = out;
+    return out;
+  }
+
+  // ---- Abstand zur nächsten Muldenlinie (für das Leiten im Steilgürtel) ----
+  const DIST = new Float64Array(N * N).fill(Infinity);
+  {
+    const q = [];
+    for (let k = 0; k < N * N; k++) if (ZONE[k] === 'rinne') { DIST[k] = 0; q.push(k); }
+    // einfache Dijkstra-Näherung (Breitensuche mit Nachbarn, mehrere Durchgänge)
+    let head = 0;
+    while (head < q.length) {
+      const k = q[head++];
+      const i = k % N, j = Math.floor(k / N);
+      for (let dj = -1; dj <= 1; dj++)
+        for (let di = -1; di <= 1; di++) {
+          if (!di && !dj) continue;
+          const ii = i + di, jj = j + dj;
+          if (ii < 0 || jj < 0 || ii >= N || jj >= N) continue;
+          const kk = idx(ii, jj);
+          const d = DIST[k] + Math.hypot(di, dj) * CELL;
+          if (d < DIST[kk]) { DIST[kk] = d; q.push(kk); }
+        }
+    }
+  }
+  const distAt = (x, y) => DIST[cellAt(x, y)];
+
+  // Richtung, in die eine Rinne im Steilgürtel das Wasser leitet: quer zum Hang, zur Muldenlinie hin
+  function leadDir(x, y, gx, gy) {
+    const g = Math.hypot(gx, gy) || 1;
+    let tx = -gy / g, ty = gx / g; // entlang der Höhenlinie
+    const e = CELL * 1.5;
+    if (distAt(x + tx * e, y + ty * e) > distAt(x - tx * e, y - ty * e)) { tx = -tx; ty = -ty; }
+    // leicht hangabwärts geneigt, damit das Wasser fließt
+    const dx = tx * 0.85 - (gx / g) * 0.45;
+    const dy = ty * 0.85 - (gy / g) * 0.45;
+    const l = Math.hypot(dx, dy);
+    return [dx / l, dy / l];
+  }
+
+  // ---- Becken am Hangfuß: flache Sammelstellen im Auslauf ----
+  const BECKEN = [];
+  {
+    const minAcc = (0.6 * 10000) / (CELL * CELL);
+    for (let j = 2; j < N - 2; j += 3)
+      for (let i = 2; i < N - 2; i += 3) {
+        const k = idx(i, j);
+        if (ZONE[k] !== 'auslauf' || SLOPE[k] > 8 || ACC[k] < minAcc) continue;
+        if (H[k] > minH + 0.35 * (maxH - minH)) continue; // nur unten am Hangfuß
+        // nicht zu dicht beieinander
+        if (BECKEN.some((b) => Math.hypot(b.x - i * CELL, b.y - j * CELL) < 140)) continue;
+        BECKEN.push({ x: i * CELL, y: j * CELL, k });
+      }
   }
 
   // ---- Hangprofil vom Gipfel aus in eine Richtung (Grad, 0 = Nord, 180 = Süd) ----
@@ -202,7 +303,8 @@
     synthetic: false,
     SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
-    heightAt, idx, zoneAt, slopeAt, zoneStats, contours, profile, bestProfileDir,
+    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS,
+    heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, zoneStats, contours, profile, bestProfileDir,
     minH, maxH,
   };
 })();

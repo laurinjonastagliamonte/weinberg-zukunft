@@ -174,3 +174,10 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: 
 .zones .sw, .zone-tabs button i, .zcard .sw { outline: 1px solid rgba(255, 255, 255, 0.35); }
 .legend i.line { height: 2px; vertical-align: 3px; background: rgba(255, 255, 255, 0.6); }
 .zones li.on .sw, .zones li:hover .sw { background: #F1E62B !important; }
+
+.legend i.line.blue { background: #3D5BFF; height: 3px; }
+.legend i.tick { width: 3px; height: 10px; background: #fff; }
+.legend i.ring { background: transparent; border: 1.5px solid #3D5BFF; border-radius: 50%; }
+.toolbar button.on { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.linkbtn { background: none; border: 0; color: #ccc; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px; }
+.linkbtn.on { color: #fff; }
