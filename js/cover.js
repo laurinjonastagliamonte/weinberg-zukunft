@@ -1,125 +1,84 @@
 /*
- * Hintergrund der Titelseite: Draufsicht auf den Korber Kopf als Zeichenraster
- * (Moodboard „Punktraster-Karte“). Eine schräge Linie fährt langsam darüber:
- * davor der Berg heute, dahinter mit Konzept (Keylines, Mulden, Wald) – „er wandelt sich“.
- * Das Raster füllt nur gut 2/3 der Fläche und läuft links schräg weich aus.
+ * Hintergrund der Titelseite: Teilchen, die sich frei über die Seite bewegen und sich
+ * immer wieder neu anordnen – erst zur Draufsicht des Korber Kopfs heute, dann zum Berg
+ * mit Konzept (Keylines und Mulden in Blau, Wald auf der Kuppe), dann lösen sie sich wieder.
+ * Zeichen wie im Moodboard „Punktraster-Karte“.
  */
 (function () {
   const WB = (window.WB = window.WB || {});
 
   const INK = '#111111';
   const BLUE = '#2433F0';
+  const PERIOD = 20; // Sekunden für einen Durchlauf
 
-  // Zeichen je Rasterzelle
-  function glyph(c, kind, x, y, s, ang = 0) {
-    const m = s / 2;
-    c.beginPath();
-    switch (kind) {
-      case 'hatch': // flach: feine Schraffur
-        c.strokeStyle = 'rgba(17,17,17,0.35)';
-        c.lineWidth = 0.7;
-        c.moveTo(x - m * 0.8, y - m * 0.8);
-        c.lineTo(x + m * 0.8, y + m * 0.8);
-        c.stroke();
-        break;
-      case 'cross': // leicht geneigt
-        c.strokeStyle = 'rgba(17,17,17,0.5)';
-        c.lineWidth = 0.7;
-        c.moveTo(x - m * 0.5, y - m * 0.5);
-        c.lineTo(x + m * 0.5, y + m * 0.5);
-        c.moveTo(x + m * 0.5, y - m * 0.5);
-        c.lineTo(x - m * 0.5, y + m * 0.5);
-        c.stroke();
-        break;
-      case 'tri': // Mittelhang
-        c.fillStyle = INK;
-        c.moveTo(x, y - m * 0.55);
-        c.lineTo(x + m * 0.5, y + m * 0.45);
-        c.lineTo(x - m * 0.5, y + m * 0.45);
-        c.fill();
-        break;
-      case 'dome': // steil: volle Form
-        c.fillStyle = INK;
-        c.arc(x, y + m * 0.1, m * 0.62, Math.PI, 0);
-        c.lineTo(x + m * 0.62, y + m * 0.55);
-        c.lineTo(x - m * 0.62, y + m * 0.55);
-        c.fill();
-        break;
-      case 'ring': // Baum
-        c.strokeStyle = INK;
-        c.lineWidth = 1.2;
-        c.arc(x, y, m * 0.42, 0, Math.PI * 2);
-        c.stroke();
-        break;
-      case 'dot': // Ort
-        c.fillStyle = 'rgba(17,17,17,0.25)';
-        c.fillRect(x - 1, y - 1, 2, 2);
-        break;
-      case 'wall': // Wall + Mulde entlang der Höhenlinie (blau)
-        c.strokeStyle = BLUE;
-        c.lineWidth = 1.8;
-        c.moveTo(x - Math.cos(ang) * m, y - Math.sin(ang) * m);
-        c.lineTo(x + Math.cos(ang) * m, y + Math.sin(ang) * m);
-        c.stroke();
-        break;
-    }
-  }
+  // Ablauf: frei → Berg heute → Berg mit Konzept → frei
+  const KEYS = [
+    [0, 'free'], [2.2, 'free'], [5.2, 'A'], [8.5, 'A'], [11.5, 'B'], [15.5, 'B'], [18.5, 'free'], [PERIOD, 'free'],
+  ];
+
+  const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
   function startCover(canvas, terrain) {
     const ctx = canvas.getContext('2d');
     const T = terrain;
     let w = 0, h = 0, dpr = 1, raf = null;
     const t0 = performance.now();
-    let today = null, future = null;
+    let parts = [];
+    const CELL = 12;
+
+    function typeToday(slope, zone) {
+      if (zone === 'ort') return 'dot';
+      return slope < 8 ? 'hatch' : slope < 18 ? 'cross' : slope < 30 ? 'tri' : 'dome';
+    }
 
     function build() {
-      const cell = 11;
-      const size = Math.max(h * 1.35, w * 0.75); // 2000 m auf so viele Pixel
-      const ox = w * 0.66 - (T.SUMMIT.x / T.SIZE) * size;
-      const oy = h * 0.5 - (T.SUMMIT.y / T.SIZE) * size;
-      const mk = () => {
-        const cv = document.createElement('canvas');
-        cv.width = Math.round(w * dpr);
-        cv.height = Math.round(h * dpr);
-        const c = cv.getContext('2d');
-        c.setTransform(dpr, 0, 0, dpr, 0, 0);
-        return [cv, c];
-      };
-      const [a, ca] = mk();
-      const [b, cb] = mk();
-      const metersPerCell = (cell / size) * T.SIZE;
-      for (let py = cell / 2; py < h; py += cell)
-        for (let px = cell / 2; px < w; px += cell) {
+      const size = Math.max(h * 1.3, w * 0.72);
+      const ox = w * 0.68 - (T.SUMMIT.x / T.SIZE) * size;
+      const oy = h * 0.52 - (T.SUMMIT.y / T.SIZE) * size;
+      const mpc = (CELL / size) * T.SIZE;
+      const cells = [];
+      for (let py = CELL / 2; py < h; py += CELL)
+        for (let px = CELL / 2; px < w; px += CELL) {
           const x = ((px - ox) / size) * T.SIZE;
           const y = ((py - oy) / size) * T.SIZE;
           if (x < 0 || y < 0 || x > T.SIZE || y > T.SIZE) continue;
+          // links neben dem Titel ausdünnen
+          const fade = Math.min(1, Math.max(0, (px - w * 0.36) / (w * 0.16)));
+          if (fade <= 0.02) continue;
           const zone = T.zoneAt(x, y);
           const slope = T.slopeAt(x, y);
-          // heute
-          let k = slope < 8 ? 'hatch' : slope < 18 ? 'cross' : slope < 30 ? 'tri' : 'dome';
-          if (zone === 'ort') k = 'dot';
-          glyph(ca, k, px, py, cell);
-          // mit Konzept
-          let f = k;
-          if (zone === 'kuppe') f = (Math.floor(px / cell) + Math.floor(py / cell)) % 2 ? 'ring' : 'hatch';
+          const a = typeToday(slope, zone);
+          let b = a, ang = 0;
+          if (zone === 'kuppe') b = (Math.round(px / CELL) + Math.round(py / CELL)) % 2 ? 'ring' : 'hatch';
           if (zone === 'mittel' || zone === 'auslauf') {
             const dh = T.KEY_DH[zone];
             const z = T.heightAt(x, y);
-            const tol = Math.max(0.5, (slope / 100) * metersPerCell * 0.55);
+            const tol = Math.max(0.5, (slope / 100) * mpc * 0.55);
             const r = ((z % dh) + dh) % dh;
             if (r < tol || dh - r < tol) {
               const e = 5;
-              const gx = T.heightAt(x + e, y) - T.heightAt(x - e, y);
-              const gy = T.heightAt(x, y + e) - T.heightAt(x, y - e);
-              glyph(cb, 'wall', px, py, cell, Math.atan2(gx, -gy)); // entlang der Höhenlinie
-              continue;
-            }
-            f = zone === 'mittel' ? 'tri' : 'hatch';
+              ang = Math.atan2(T.heightAt(x + e, y) - T.heightAt(x - e, y), -(T.heightAt(x, y + e) - T.heightAt(x, y - e)));
+              b = 'wall';
+            } else b = zone === 'mittel' ? 'tri' : 'hatch';
           }
-          glyph(cb, f, px, py, cell);
+          cells.push({ px, py, a, b, ang, fade, x, y });
         }
-      today = a;
-      future = b;
+      // Ordnung für „Berg mit Konzept“: Teilchen tauschen die Plätze (Drehung um den Gipfel)
+      const sx = ox + (T.SUMMIT.x / T.SIZE) * size, sy = oy + (T.SUMMIT.y / T.SIZE) * size;
+      const order = cells.map((c, i) => i);
+      const key = (c) => Math.round(Math.hypot(c.px - sx, c.py - sy) / (CELL * 3)) * 10 + Math.atan2(c.py - sy, c.px - sx);
+      const sorted = [...order].sort((i, j) => key(cells[i]) - key(cells[j]));
+      const shifted = sorted.map((_, n) => sorted[(n + Math.floor(sorted.length * 0.03)) % sorted.length]);
+      const rank = new Array(cells.length);
+      sorted.forEach((ci, n) => (rank[ci] = n));
+      parts = cells.map((c, i) => ({
+        A: c,
+        B: cells[shifted[rank[i]]],
+        fx: Math.random() * w, fy: Math.random() * h, // freie Position
+        vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18,
+        delay: Math.random() * 0.35 + (c.px / w) * 0.25,
+        freeType: ['hatch', 'cross', 'tri', 'dot'][i % 4],
+      }));
     }
 
     function resize() {
@@ -132,42 +91,74 @@
       build();
     }
 
+    // Zustand im Ablauf: von, nach, Fortschritt 0..1
+    function phase(tt) {
+      for (let i = 0; i < KEYS.length - 1; i++) {
+        const [ta, sa] = KEYS[i];
+        const [tb, sb] = KEYS[i + 1];
+        if (tt >= ta && tt < tb) return [sa, sb, (tt - ta) / (tb - ta)];
+      }
+      return ['free', 'free', 0];
+    }
+
     function frame(now) {
       const time = (now - t0) / 1000;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Wandel hin und zurück (ca. 18 s)
-      const s = 0.5 - 0.5 * Math.cos((time / 18) * Math.PI * 2);
-      const tilt = 0.35 * h; // schräge Front
-      const fx = w * 0.3 + s * (w * 0.8);
-      ctx.drawImage(today, 0, 0);
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo((fx + tilt) * dpr, 0);
-      ctx.lineTo((fx - tilt) * dpr, h * dpr);
-      ctx.lineTo(0, h * dpr);
-      ctx.closePath();
-      ctx.clip();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(future, 0, 0);
-      ctx.restore();
-      // Front als feine blaue Linie
-      ctx.strokeStyle = BLUE;
-      ctx.lineWidth = 1.5 * dpr;
-      ctx.beginPath();
-      ctx.moveTo((fx + tilt) * dpr, 0);
-      ctx.lineTo((fx - tilt) * dpr, h * dpr);
-      ctx.stroke();
-      // nur gut 2/3 der Fläche: links schräg weich ausblenden
-      ctx.globalCompositeOperation = 'destination-in';
-      const g = ctx.createLinearGradient(w * 0.36 * dpr, h * 0.2 * dpr, w * 0.56 * dpr, h * 0.45 * dpr);
-      g.addColorStop(0, 'rgba(0,0,0,0)');
-      g.addColorStop(1, 'rgba(0,0,0,1)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.globalCompositeOperation = 'source-over';
+      const tt = time % PERIOD;
+      const [from, to, k] = phase(tt);
+      const dt = 1 / 60;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      // Teilchen nach Zeichen sammeln, dann je Zeichen in einem Zug zeichnen
+      const buckets = { hatch: [], cross: [], tri: [], dome: [], ring: [], dot: [], wall: [] };
+      for (const p of parts) {
+        // freie Teilchen treiben langsam
+        p.fx += p.vx * dt;
+        p.fy += p.vy * dt;
+        if (p.fx < -20) p.fx = w + 20;
+        if (p.fx > w + 20) p.fx = -20;
+        if (p.fy < -20) p.fy = h + 20;
+        if (p.fy > h + 20) p.fy = -20;
+        const pos = (s) => (s === 'free' ? [p.fx, p.fy, 0.35] : s === 'A' ? [p.A.px, p.A.py, p.A.fade] : [p.B.px, p.B.py, p.B.fade]);
+        const [x0, y0, a0] = pos(from);
+        const [x1, y1, a1] = pos(to);
+        const local = Math.min(1, Math.max(0, (k - p.delay * (from === to ? 0 : 1)) / (1 - p.delay)));
+        const e = from === to ? 0 : ease(local);
+        const x = x0 + (x1 - x0) * e;
+        const y = y0 + (y1 - y0) * e;
+        const alpha = a0 + (a1 - a0) * e;
+        const state = e < 0.5 ? from : to;
+        const type = state === 'free' ? p.freeType : state === 'A' ? p.A.a : p.B.b;
+        const ang = state === 'B' ? p.B.ang : 0;
+        buckets[type].push(x, y, alpha, ang);
+      }
+
+      const m = CELL / 2;
+      const draw = (list, fn, style, isStroke, lw) => {
+        if (!list.length) return;
+        for (let i = 0; i < list.length; i += 4) {
+          ctx.globalAlpha = list[i + 2];
+          ctx.beginPath();
+          fn(list[i], list[i + 1], list[i + 3]);
+          if (isStroke) { ctx.strokeStyle = style; ctx.lineWidth = lw; ctx.stroke(); }
+          else { ctx.fillStyle = style; ctx.fill(); }
+        }
+      };
+      draw(buckets.hatch, (x, y) => { ctx.moveTo(x - m * 0.8, y - m * 0.8); ctx.lineTo(x + m * 0.8, y + m * 0.8); }, 'rgba(17,17,17,0.4)', true, 0.7);
+      draw(buckets.cross, (x, y) => {
+        ctx.moveTo(x - m * 0.5, y - m * 0.5); ctx.lineTo(x + m * 0.5, y + m * 0.5);
+        ctx.moveTo(x + m * 0.5, y - m * 0.5); ctx.lineTo(x - m * 0.5, y + m * 0.5);
+      }, 'rgba(17,17,17,0.55)', true, 0.7);
+      draw(buckets.tri, (x, y) => { ctx.moveTo(x, y - m * 0.55); ctx.lineTo(x + m * 0.5, y + m * 0.45); ctx.lineTo(x - m * 0.5, y + m * 0.45); }, INK, false);
+      draw(buckets.dome, (x, y) => {
+        ctx.arc(x, y + m * 0.1, m * 0.62, Math.PI, 0); ctx.lineTo(x + m * 0.62, y + m * 0.55); ctx.lineTo(x - m * 0.62, y + m * 0.55);
+      }, INK, false);
+      draw(buckets.ring, (x, y) => { ctx.arc(x, y, m * 0.42, 0, Math.PI * 2); }, INK, true, 1.2);
+      draw(buckets.dot, (x, y) => { ctx.rect(x - 1, y - 1, 2, 2); }, 'rgba(17,17,17,0.3)', false);
+      draw(buckets.wall, (x, y, a) => {
+        ctx.moveTo(x - Math.cos(a) * m, y - Math.sin(a) * m); ctx.lineTo(x + Math.cos(a) * m, y + Math.sin(a) * m);
+      }, BLUE, true, 1.8);
+      ctx.globalAlpha = 1;
       raf = requestAnimationFrame(frame);
     }
 

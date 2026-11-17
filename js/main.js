@@ -223,7 +223,7 @@
       ['Fläche Hang (ohne Ort)', `${total.toFixed(0)} ha`],
       ['Fläche zum Versickern', `${vers.toFixed(0)} ha`],
       ['Grenze Leiten / Versickern', '30 %'],
-      ['Datenbasis', 'STL-Modell 1:13333'],
+      ['Datenbasis', 'STL-Modell 1:4000'],
     ]
       .map(([a, b]) => `<li><span>${a}</span><strong>${b}</strong></li>`)
       .join('');

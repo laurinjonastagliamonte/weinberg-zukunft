@@ -16,7 +16,7 @@
       this.yaw = -0.55;
       this.pitch = 0.62;
       this.zoom = 1;
-      this.exag = 2.2;
+      this.exag = 1; // Höhe unverzerrt (Modell 1:4000)
       this.mode = opts.mode || 'zonen'; // 'zonen' | 'hoehen' | 'sim' | 'reco'
       this.centerX = opts.centerX ?? 0.4; // Anteil der Breite (Platz für Panels)
       this.highlight = null; // Zonen-Key

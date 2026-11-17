@@ -26,13 +26,14 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | `js/terrain.js` | Neigung, Fließwege, Zonen, Höhenlinien, Profil |
 | `js/data.js` | Inhalte aus dem Konzept: Maßnahmen und Pflanzen je Zone |
 | `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek), Drehen, Zoomen, Zone anklicken |
-| `js/cover.js` | Animierte Draufsicht der Titelseite (Zeichenraster, heute ↔ Konzept) |
+| `js/cover.js` | Titelseite: freie Teilchen ordnen sich zum Berg heute und mit Konzept |
 | `js/sim3d.js` | Wassersimulation auf dem 3D-Gelände (Modell + Darstellung) |
 | `js/main.js` | Ablauf und Navigation |
 
 ## Wichtig: Platzhalter
 
-- **Gelände:** Höhen aus eurem STL-Modell `Korber_Kopf_15x15cm.stl` (1:13333, 2 × 2 km), auf ein 6,7-m-Raster gebracht, leicht geglättet, Ortsgrenze herausgerechnet
+- **Gelände:** Höhen aus eurem STL-Modell `Korber-Kopf_1zu4000.stl` (1:4000, 2 × 2 km, 10-m-Raster), unverzerrt, leicht geglättet;
+  Ortsfläche Korb aus dem früheren Modell übernommen (gleiche Lage)
   und an den Kachel-Höhendaten (`korber_kopf_daten/mosaic.npy`) ausgerichtet (mittlere Abweichung unter 1 m).
   Daten in `js/korber-kopf-data.js`. Für weitere Berge eine neue Datendatei im gleichen Format anlegen.
 - **Simulation:** vereinfachtes Modell zum Zeigen des Prinzips, keine hydrologische Berechnung.
