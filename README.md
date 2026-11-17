@@ -26,7 +26,7 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | `js/terrain.js` | Neigung, Fließwege, Zonen, Höhenlinien, Profil |
 | `js/data.js` | Inhalte aus dem Konzept: Maßnahmen und Pflanzen je Zone |
 | `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek), Drehen, Zoomen, Zone anklicken |
-| `js/cover.js` | Titelseite: freie Teilchen ordnen sich zum Berg heute und mit Konzept |
+| `js/cover.js` | Titelseite: Korber Kopf als Zeichenraster, verwandelt sich in Beispiele (Wall-Mulde-System, Problemzonen) |
 | `js/sim3d.js` | Wassersimulation auf dem 3D-Gelände (Modell + Darstellung) |
 | `js/main.js` | Ablauf und Navigation |
 
