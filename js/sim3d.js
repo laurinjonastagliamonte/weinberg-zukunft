@@ -239,7 +239,7 @@
         ctx.stroke();
       } else {
         const a = view.project(p.x, p.y, z + 1);
-        ctx.fillStyle = p.burst ? '#E5402A' : p.led ? '#3FD0E0' : '#9DBBFF';
+        ctx.fillStyle = p.burst ? '#E5402A' : p.led ? '#FFFFFF' : '#5C7CFF';
         ctx.fillRect(a[0] - 1.8, a[1] - 1.8, 3.6, 3.6);
       }
     }

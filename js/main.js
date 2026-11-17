@@ -137,10 +137,10 @@
     const r = Math.max(1, s.regen);
     const pct = (v) => (s.regen ? Math.round((v / r) * 100) + ' %' : '–');
     const items = [
-      ['Regen', s.regen ? s.regen : '–', 'Wasserpakete', '#7FA4FF', 1],
-      ['Versickert', pct(s.versickert), 'im Boden', '#5BC07A', s.versickert / r],
+      ['Regen', s.regen ? s.regen : '–', 'Wasserpakete', '#5C7CFF', 1],
+      ['Versickert', pct(s.versickert), 'im Boden', '#A8A8A8', s.versickert / r],
       ['In Mulden', pct(sim.stored()), 'versickert gerade', '#2433F0', sim.stored() / r],
-      ['Geleitet', pct(s.geleitet), 'über Rinnen', '#3FD0E0', s.geleitet / r],
+      ['Geleitet', pct(s.geleitet), 'über Rinnen', '#FFFFFF', s.geleitet / r],
       ['Abgeflossen', pct(s.abgeflossen), 'aus dem Ausschnitt', '#E5402A', s.abgeflossen / r],
     ];
     $('#stats').innerHTML = items

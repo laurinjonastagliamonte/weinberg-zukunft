@@ -87,11 +87,11 @@
 
   // ---- Zonen ----
   const ZONES = {
-    kuppe: { key: 'kuppe', name: 'Kuppe', sub: 'Schwammkuppe', range: 'fast eben', water: 'viel Wasser in den Boden', color: '#5BC07A' },
-    steil: { key: 'steil', name: 'Steilgürtel', sub: 'Leithang', range: 'über 30 %', water: 'Wasser leiten', color: '#F1E62B' },
-    mittel: { key: 'mittel', name: 'Mittelhang', sub: '', range: '18–30 %', water: 'bremsen & versickern', color: '#8FA2FF' },
-    auslauf: { key: 'auslauf', name: 'Auslauf & Hangfuß', sub: '', range: 'unter 18 %', water: 'versickern lassen', color: '#2433F0' },
-    rinne: { key: 'rinne', name: 'Muldenlinie', sub: 'Abflussrinne', range: 'Tiefenlinie', water: 'Stufenrinne mit Kopfweiden', color: '#3FD0E0' },
+    kuppe: { key: 'kuppe', name: 'Kuppe', sub: 'Schwammkuppe', range: 'fast eben', water: 'viel Wasser in den Boden', color: '#D9D9D9' },
+    steil: { key: 'steil', name: 'Steilgürtel', sub: 'Leithang', range: 'über 30 %', water: 'Wasser leiten', color: '#FFFFFF' },
+    mittel: { key: 'mittel', name: 'Mittelhang', sub: '', range: '18–30 %', water: 'bremsen & versickern', color: '#A8A8A8' },
+    auslauf: { key: 'auslauf', name: 'Auslauf & Hangfuß', sub: '', range: 'unter 18 %', water: 'versickern lassen', color: '#5C5C5C' },
+    rinne: { key: 'rinne', name: 'Muldenlinie', sub: 'Abflussrinne', range: 'Tiefenlinie', water: 'Stufenrinne mit Kopfweiden', color: '#8C8C8C' },
   };
   const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'rinne'];
 

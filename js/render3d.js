@@ -209,9 +209,9 @@
         for (let n = 0; n < N * N; n++) {
           const z = t.ZONE[n];
           const on = !this.highlight || z === this.highlight;
-          ctx.globalAlpha = on ? dim : 0.08;
+          ctx.globalAlpha = on ? dim : 0.12;
           const p = P[n];
-          ctx.fillStyle = t.ZONES[z].color;
+          ctx.fillStyle = on && this.highlight ? '#F1E62B' : t.ZONES[z].color;
           const r = 0.9 + Math.max(0, p[2]) / (t.SIZE * 1.1) + (on && this.highlight ? 0.4 : 0);
           ctx.fillRect(p[0] - r, p[1] - r, r * 2, r * 2);
         }
@@ -221,7 +221,7 @@
       // Wälle und Mulden als feine Linien entlang der Höhe (nur Mittelhang und Auslauf)
       if (this.showMulden) {
         if (!this.fine) this.fine = t.contours(4);
-        ctx.strokeStyle = 'rgba(205,170,120,0.45)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
         ctx.lineWidth = 0.7;
         ctx.beginPath();
         for (const c of this.fine)

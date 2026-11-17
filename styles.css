@@ -169,3 +169,8 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: 
   .side { width: 300px; }
   .steps button { padding: 8px 10px; }
 }
+
+/* Schwarz-weiß: Zonen-Swatches mit Rand */
+.zones .sw, .zone-tabs button i, .zcard .sw { outline: 1px solid rgba(255, 255, 255, 0.35); }
+.legend i.line { height: 2px; vertical-align: 3px; background: rgba(255, 255, 255, 0.6); }
+.zones li.on .sw, .zones li:hover .sw { background: #F1E62B !important; }
