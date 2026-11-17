@@ -5,7 +5,7 @@ Prototyp der Website für ein klimafestes Bewirtschaftungssystem für Weinberge
 
 Die Seite folgt dem Flowchart im FigJam-Board „Produktgestaltung WS 26/27“ (Section „Website“):
 
-1. **Berg wählen** – Suche, Draufsicht als Punktraster
+1. **Cover** – „Weinberge zukunftsorientiert denken“, animierte Linienwellen aus Schnitten durch den Korber Kopf, transluzente Karten, Bergsuche
 2. **Analyse** – 3D-Drahtgitter des Bergs, Zonen nach Hangneigung, Höhenlinien
 3. **Simulation** – Regen direkt auf dem 3D-Modell: heute vs. mit Wall-Mulde-System, Zeitraum, Wallbruch
 4. **Empfehlung** – Zone auf dem 3D-Modell anklicken: Maßnahmen und Pflanzen, dazu Baukasten Wall & Mulde und Steckbrief
@@ -26,7 +26,7 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | `js/terrain.js` | Neigung, Fließwege, Zonen, Höhenlinien, Profil |
 | `js/data.js` | Inhalte aus dem Konzept: Maßnahmen und Pflanzen je Zone |
 | `js/render3d.js` | 3D-Drahtgitter auf Canvas (ohne Bibliothek), Drehen, Zoomen, Zone anklicken |
-| `js/dotmap.js` | Draufsicht als Punktraster |
+| `js/cover.js` | Animierte Linienwellen der Titelseite |
 | `js/sim3d.js` | Wassersimulation auf dem 3D-Gelände (Modell + Darstellung) |
 | `js/main.js` | Ablauf und Navigation |
 
@@ -48,7 +48,6 @@ Direkt zu einem Schritt springen: `index.html#2`, `#3` oder `#4`.
 | Steilgürtel | über 30 % | leiten |
 | Mittelhang | 18–30 % | bremsen & versickern |
 | Auslauf & Hangfuß | unter 18 % | versickern lassen |
-| Muldenlinie | ab 1,5 ha Einzugsgebiet (Fließwege) | Stufenrinne mit Kopfweiden |
 | Ort (Korb) | aus dem STL (eingravierte Ortsgrenze) | nicht bewirtschaftet, nur zur Orientierung |
 
 ## Konzept im Modell (Konzept Melissa)
@@ -60,9 +59,9 @@ Schalter „Konzept“ in der Analyse, immer an in Simulation (Wall-Mulde-System
 - **Mittelhang:** Keylines alle 5 m – Wall mit Reben (weiß), Mulde 1 m dahinter (blau)
 - **Auslauf:** weitere Keylines alle 8 m, breitere Mulden (1,5 m), Becken am Hangfuß
 - **Querriegel** je 10-m-Kammer, **Überlauf mit Steinen** in der Kammermitte
-- **Muldenlinie:** Stufenrinne mit Kopfweiden
+- **Weg des Wassers:** blaue Linien zeigen, wie Wasser durch das System läuft (fest bis zur ersten Mulde, gestrichelt = Überlauf)
 
-Die Abstände sind für die Darstellung auf 2 km gleichmäßig vergrößert (Faktor `VIS` in `js/terrain.js`),
-das Verhältnis eng / weit entspricht dem Konzept.
+Die echten Abstände (3,5 / 5 / 8 m) wären auf 2 km nicht zu sehen. Dargestellt werden sie mit
+32 / 58 / 95 m (`KEYLINE.vis` in `js/terrain.js`): oben eng, nach unten deutlich weiter.
 
 Änderbar in `js/terrain.js` → `THRESHOLDS`.

@@ -15,19 +15,19 @@
     steil: 30, // ab 30 % Hangneigung: Steilgürtel, Wasser leiten (Steillage nach Weingesetz)
     mittel: 18, // 18–30 %: Mittelhang, bremsen & versickern
     kuppeDrop: 15, // Kuppe: höchstens 15 m unter dem Gipfel ...
-    rinneArea: 1.5, // Muldenlinie: ab 1,5 ha Einzugsgebiet sammelt sich das Wasser
+    rinneArea: 1.5, // natürliche Tiefenlinie: ab 1,5 ha Einzugsgebiet (nur intern, Ziel des Leitens)
   };
 
   // ---- Keylines nach Konzept Melissa ----
   // Echte Abstände: Steilgürtel Rinnen alle 3,5 m, Mittelhang Mulden alle 5 m (1 m breit),
-  // Auslauf Mulden alle 8 m (1,5 m breit). Für die Darstellung auf 2 km werden sie
-  // gleichmäßig vergrößert (Faktor VIS), damit man das Muster erkennt.
-  const VIS = 7;
+  // Auslauf Mulden alle 8 m (1,5 m breit). Auf 2 km wären die nicht zu sehen, deshalb gibt
+  // `vis` den dargestellten Abstand im Gelände an (m): oben eng, nach unten deutlich weiter.
   const KEYLINE = {
-    steil: { spacing: 3.5, muldeWidth: 0 },
-    mittel: { spacing: 5, muldeWidth: 1 },
-    auslauf: { spacing: 8, muldeWidth: 1.5 },
+    steil: { spacing: 3.5, muldeWidth: 0, vis: 32, visMulde: 0 },
+    mittel: { spacing: 5, muldeWidth: 1, vis: 58, visMulde: 9 },
+    auslauf: { spacing: 8, muldeWidth: 1.5, vis: 95, visMulde: 15 },
   };
+  const VIS = KEYLINE.mittel.vis / KEYLINE.mittel.spacing; // nur für Kammerlänge (Querriegel)
 
   // ---- Höhenraster dekodieren ----
   const N = D.n;
@@ -107,17 +107,15 @@
     steil: { key: 'steil', name: 'Steilgürtel', sub: 'Leithang', range: 'über 30 %', water: 'Wasser leiten', color: '#FFFFFF' },
     mittel: { key: 'mittel', name: 'Mittelhang', sub: '', range: '18–30 %', water: 'bremsen & versickern', color: '#A8A8A8' },
     auslauf: { key: 'auslauf', name: 'Auslauf & Hangfuß', sub: '', range: 'unter 18 %', water: 'versickern lassen', color: '#5C5C5C' },
-    rinne: { key: 'rinne', name: 'Muldenlinie', sub: 'Abflussrinne', range: 'Tiefenlinie', water: 'Stufenrinne mit Kopfweiden', color: '#8C8C8C' },
     ort: { key: 'ort', name: 'Ort', sub: 'Korb', range: 'bebaut', water: 'wird durch das Konzept geschützt', color: '#2E2E2E' },
   };
-  const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'rinne', 'ort'];
+  const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'ort'];
 
   const ZONE = new Array(N * N);
   for (let k = 0; k < N * N; k++) {
     const s = SLOPE[k];
     if (TOWN[k]) ZONE[k] = 'ort';
     else if (H[k] >= maxH - THRESHOLDS.kuppeDrop && s < THRESHOLDS.mittel) ZONE[k] = 'kuppe';
-    else if (ACC[k] >= rinneCells) ZONE[k] = 'rinne';
     else if (s >= THRESHOLDS.steil) ZONE[k] = 'steil';
     else if (s >= THRESHOLDS.mittel) ZONE[k] = 'mittel';
     else ZONE[k] = 'auslauf';
@@ -191,7 +189,7 @@
     zoneSlope[z] = (v[Math.floor(v.length / 2)] || 10) / 100;
   }
   const KEY_DH = {}; // Höhenabstand der Linien je Zone (m)
-  for (const [z, c] of Object.entries(KEYLINE)) KEY_DH[z] = c.spacing * VIS * zoneSlope[z];
+  for (const [z, c] of Object.entries(KEYLINE)) KEY_DH[z] = c.vis * zoneSlope[z];
 
   let keyCache = null;
   function keylines() {
@@ -201,7 +199,7 @@
       const dh = KEY_DH[z];
       const walls = contours(dh, Math.ceil(minH / dh) * dh);
       // Mulde liegt hangaufwärts direkt hinter dem Wall
-      const md = c.muldeWidth ? c.muldeWidth * VIS * 0.6 * zoneSlope[z] : 0;
+      const md = c.visMulde ? c.visMulde * zoneSlope[z] : 0;
       const mulden = md ? contours(dh, Math.ceil(minH / dh) * dh + md) : [];
       const keep = (list) =>
         list.map((l) => ({
@@ -218,7 +216,7 @@
   const DIST = new Float64Array(N * N).fill(Infinity);
   {
     const q = [];
-    for (let k = 0; k < N * N; k++) if (ZONE[k] === 'rinne') { DIST[k] = 0; q.push(k); }
+    for (let k = 0; k < N * N; k++) if (ACC[k] >= rinneCells && !TOWN[k]) { DIST[k] = 0; q.push(k); }
     // einfache Dijkstra-Näherung (Breitensuche mit Nachbarn, mehrere Durchgänge)
     let head = 0;
     while (head < q.length) {
@@ -248,6 +246,58 @@
     const dy = ty * 0.85 - (gy / g) * 0.45;
     const l = Math.hypot(dx, dy);
     return [dx / l, dy / l];
+  }
+
+  // ---- Weg des Wassers durch das Leit-/Muldensystem (für die blauen Linien) ----
+  // Von oben am Hang aus: im Steilgürtel quer geleitet, darunter hangabwärts von Wall zu Wall.
+  // An jedem Wall steht eine Mulde; die erste nimmt das Wasser auf, danach zeigt die Linie
+  // gestrichelt, wohin es über den Überlauf liefe, wenn die Mulden voll sind.
+  let pathCache = null;
+  function waterPaths(count = 9) {
+    if (pathCache) return pathCache;
+    const paths = [];
+    const step = 4;
+    for (let n = 0; n < count; n++) {
+      const ang = (n / count) * Math.PI * 2 + 0.3;
+      // Startpunkt: vom Gipfel nach außen bis zum Rand der Kuppe
+      let sx = SUMMIT.x, sy = SUMMIT.y;
+      for (let r = 0; r < 600; r += 4) {
+        sx = SUMMIT.x + Math.cos(ang) * r;
+        sy = SUMMIT.y + Math.sin(ang) * r;
+        const z = zoneAt(sx, sy);
+        if (z !== 'kuppe') break;
+      }
+      let x = sx, y = sy;
+      const pts = [[x, y, heightAt(x, y)]];
+      const mulden = [];
+      let firstMulde = -1;
+      let led = 0;
+      for (let it = 0; it < 900; it++) {
+        if (x < 0 || y < 0 || x > SIZE || y > SIZE) break;
+        const zone = zoneAt(x, y);
+        if (zone === 'ort') break;
+        const e = 4;
+        const gx = (heightAt(x + e, y) - heightAt(x - e, y)) / (2 * e);
+        const gy = (heightAt(x, y + e) - heightAt(x, y - e)) / (2 * e);
+        const g = Math.hypot(gx, gy);
+        if (g < 0.006) break; // Senke: Wasser bleibt und versickert
+        let dx = -gx / g, dy = -gy / g;
+        if (zone === 'steil' && led < 90) { [dx, dy] = leadDir(x, y, gx, gy); led += step; }
+        const h0 = heightAt(x, y);
+        x += dx * step;
+        y += dy * step;
+        const h1 = heightAt(x, y);
+        pts.push([x, y, h1]);
+        const dh = KEY_DH[zone];
+        if ((zone === 'mittel' || zone === 'auslauf') && dh && Math.floor(h1 / dh) < Math.floor(h0 / dh)) {
+          mulden.push([x, y, h1]);
+          if (firstMulde < 0) firstMulde = pts.length - 1;
+        }
+      }
+      if (pts.length > 15) paths.push({ pts, mulden, firstMulde });
+    }
+    pathCache = paths;
+    return paths;
   }
 
   // ---- Becken am Hangfuß: flache Sammelstellen im Auslauf ----
@@ -290,7 +340,7 @@
       for (const q of p) c[q.zone] = (c[q.zone] || 0) + 1;
       const kinds = ['steil', 'mittel', 'auslauf'].filter((k) => (c[k] || 0) >= 4).length;
       const drop = p[0].z - p[p.length - 1].z;
-      const score = kinds * 100 + drop - (c.rinne || 0) * 8;
+      const score = kinds * 100 + drop;
       if (score > best.score) best = { dir: d, score };
     }
     return best.dir;
@@ -304,7 +354,7 @@
     SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
     TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS,
-    heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, zoneStats, contours, profile, bestProfileDir,
+    heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, waterPaths, zoneStats, contours, profile, bestProfileDir,
     minH, maxH,
   };
 })();

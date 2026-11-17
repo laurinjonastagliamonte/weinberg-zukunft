@@ -12,6 +12,7 @@
   const state = { step: 1, mountain: null, zone: 'kuppe' };
   const views = {}; // 3D-Ansichten je Schritt
   let sim = null;
+  let cover = null;
 
   // ---------- Navigation ----------
   function go(step) {
@@ -20,8 +21,13 @@
     $$('.view').forEach((v) => v.classList.toggle('active', +v.dataset.view === step));
     $$('.steps button').forEach((b) => b.classList.toggle('active', +b.dataset.step === step));
     $('.topbar').classList.toggle('on-dark', step > 1);
+    $('.topbar').classList.toggle('on-cover', step === 1);
+    if (step !== 1 && cover) cover.stop();
     requestAnimationFrame(() => {
-      if (step === 1) WB.drawDotMap($('#dotmap'), T, { gap: 10, marker: !!state.mountain });
+      if (step === 1) {
+        if (!cover) cover = WB.startCover($('#waves'), T);
+        else cover.start();
+      }
       if (step === 2) initAnalyse();
       if (step === 3) initSim();
       if (step === 4) initReco();
@@ -46,6 +52,14 @@
     if (first) choose(first.dataset.mountain);
   });
   $$('.sugg[data-mountain]').forEach((li) => li.addEventListener('click', () => choose(li.dataset.mountain)));
+  $('#go').addEventListener('click', () => {
+    const first = $$('.sugg[data-mountain]').find((li) => !li.classList.contains('hidden'));
+    if (first) choose(first.dataset.mountain);
+  });
+  input.addEventListener('focus', () => $('.cover-search').classList.add('open'));
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.cover-search')) $('.cover-search').classList.remove('open');
+  });
   function choose(id) {
     state.mountain = id;
     updateNav();
@@ -89,7 +103,7 @@
   // Schalter „Konzept“ und „Beschriftung“
   function bindToggles(scope, v) {
     $$(`${scope} [data-toggle]`).forEach((b) => {
-      const key = b.dataset.toggle === 'concept' ? 'showConcept' : 'showLabels';
+      const key = { concept: 'showConcept', labels: 'showLabels', paths: 'showPaths' }[b.dataset.toggle];
       b.classList.toggle('on', !!v[key]);
       b.addEventListener('click', () => {
         v[key] = !v[key];
@@ -212,7 +226,6 @@
 
   // ---------- Start ----------
   window.addEventListener('resize', () => {
-    if (state.step === 1) WB.drawDotMap($('#dotmap'), T, { gap: 10, marker: !!state.mountain });
     const v = { 2: views.analyse, 3: views.sim, 4: views.reco }[state.step];
     if (v) v.resize();
   });

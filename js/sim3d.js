@@ -16,7 +16,7 @@
 
   const PARAMS = {
     rainSeconds: 10,
-    rainRate: 320, // Pakete pro Sekunde bei Faktor 1
+    rainRate: 480, // Pakete pro Sekunde bei Faktor 1
     infil: {
       heute: { kuppe: 0.004, steil: 0.0015, mittel: 0.002, auslauf: 0.003, rinne: 0.002 },
       konzept: { kuppe: 0.03, steil: 0.003, mittel: 0.005, auslauf: 0.006, rinne: 0.012 },
@@ -159,9 +159,10 @@
         let dx = -gx / g;
         let dy = -gy / g;
         let v = 6 + 110 * Math.sqrt(g);
-        if (konzept && zone === 'steil') {
-          [dx, dy] = t.leadDir(p.x, p.y, gx, gy); // Rinne leitet quer zur Muldenlinie
+        if (konzept && zone === 'steil' && (p.ledDist || 0) < 90) {
+          [dx, dy] = t.leadDir(p.x, p.y, gx, gy); // Rinne leitet quer zur natürlichen Tiefenlinie
           v *= 0.55;
+          p.ledDist = (p.ledDist || 0) + v * dt;
           if (!p.led) { p.led = true; this.stats.geleitet++; }
         } else if (konzept && zone === 'rinne') {
           v *= 0.45; // Stufenrinne bremst
@@ -257,10 +258,10 @@
     for (const p of model.parts) {
       const z = t.heightAt(p.x, p.y);
       if (p.fall > 0) {
-        const a = view.project(p.x, p.y, z + p.fall * 60);
-        const b = view.project(p.x, p.y, z + p.fall * 60 + 8);
-        ctx.strokeStyle = 'rgba(120,150,255,0.7)';
-        ctx.lineWidth = 1;
+        const a = view.project(p.x, p.y, z + p.fall * 80);
+        const b = view.project(p.x, p.y, z + p.fall * 80 + 22);
+        ctx.strokeStyle = 'rgba(92,124,255,0.9)';
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
         ctx.moveTo(a[0], a[1]);
         ctx.lineTo(b[0], b[1]);

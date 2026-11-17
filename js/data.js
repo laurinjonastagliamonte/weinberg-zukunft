@@ -1,6 +1,6 @@
 /*
  * Inhalte aus dem Konzept (FigJam „Produktgestaltung WS 26/27“: Konzept Melissa,
- * Pflanzen Kuppe, Pflanzen und Konzept Abflussrinne). Hier zentral pflegen.
+ * Pflanzen Kuppe). Hier zentral pflegen.
  */
 (function () {
   const WB = (window.WB = window.WB || {});
@@ -44,15 +44,6 @@
         },
       },
       ort: null, // siehe ortInfo
-      rinne: {
-        idea: 'Stufenrinne mit Kopfweiden. Lebende Querriegel aus Weide bremsen das Wasser.',
-        measures: ['Stufenrinne', 'Kopfweiden', 'lebende Querriegel aus Weide'],
-        plants: {
-          'Außenrand': ['Maulbeere', 'Quitte', 'Mispel', 'Schlehe', 'Weißdorn', 'Wegwarte', 'Wiesensalbei'],
-          'Flanke': ['Flatterulme', 'Holunder', 'Roter Hartriegel', 'Schneeball', 'Rohrschwingel'],
-          'Sohle': ['Purpurweide', 'Rohrglanzgras', 'Beinwell', 'Schwedenklee'],
-        },
-      },
     },
     ortInfo: {
       idea: 'Der Ort Korb liegt am Hangfuß. Er ist nicht Teil der Bewirtschaftung, profitiert aber vom Konzept: Weniger Wasser schießt bei Starkregen den Hang hinunter.',
