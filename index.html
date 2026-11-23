@@ -44,22 +44,28 @@
   <!-- 02 Analyse -->
   <section class="view view-analyse dark" data-view="2">
     <canvas class="mountain" id="mountain"></canvas>
-    <div class="toolbar glass-dark">
-      <button data-mode="zonen" class="active">Zonen</button>
-      <button data-mode="hoehen">Höhenlinien</button>
-      <button data-mode="probleme">Problemzonen</button>
-      <button data-view3d="draufsicht">Draufsicht</button>
-      <button data-view3d="schraeg">3D</button>
-      <button data-toggle="concept">Konzept</button>
-      <button data-toggle="labels">Beschriftung</button>
-    </div>
-    <div class="toolbar glass-dark toolbar-2" id="wx-analyse" aria-label="Jahreszeit">
-      <span class="tb-label">Jahreszeit</span>
-      <button data-wx="jetzt">Jetzt</button>
-      <button data-wx="fruehling">Frühling</button>
-      <button data-wx="sommer">Sommer</button>
-      <button data-wx="herbst">Herbst</button>
-      <button data-wx="winter">Winter</button>
+    <div class="toolstack">
+      <div class="toolbar glass-dark">
+        <span class="tb-label">Ansicht</span>
+        <button data-mode="zonen" class="active">Zonen</button>
+        <button data-mode="hoehen">Höhenlinien</button>
+        <button data-mode="probleme">Problemzonen</button>
+        <button data-toggle="concept">Konzept</button>
+      </div>
+      <div class="toolbar glass-dark" id="wx-analyse" aria-label="Jahreszeit">
+        <span class="tb-label">Jahreszeit</span>
+        <button data-wx="jetzt">Jetzt</button>
+        <button data-wx="fruehling">Frühling</button>
+        <button data-wx="sommer">Sommer</button>
+        <button data-wx="herbst">Herbst</button>
+        <button data-wx="winter">Winter</button>
+      </div>
+      <div class="toolbar glass-dark">
+        <span class="tb-label">Kamera</span>
+        <button data-view3d="schraeg">3D</button>
+        <button data-view3d="draufsicht">Draufsicht</button>
+        <button data-toggle="labels">Beschriftung</button>
+      </div>
     </div>
     <aside class="side glass-dark">
       <p class="eyebrow">02 · Analyse</p>
@@ -78,7 +84,7 @@
         </select>
       </label>
       <div class="wx-card" id="wx-card"><span class="muted">Oben links eine Jahreszeit wählen oder „Jetzt“ – der Berg zeigt dann die Problemzonen dieser Jahreszeit.</span></div>
-      <h3>Problemzonen</h3>
+      <h3 id="problems-title">Problemzonen · ganzjährig</h3>
       <ul class="zones problems" id="problems"></ul>
       <p class="note small-note">Aus der Geländelage abgeleitet (Senken, Hangrichtung, Wölbung, Einzugsgebiet), keine Messdaten. Später mit Wetter- und Bodendaten abgleichen.</p>
       <button class="cta" data-goto="3">Weiter zur Simulation →</button>

@@ -117,8 +117,10 @@
       }
       v.problems = new Set(problems);
       v.weather = weather;
-      setMode('probleme');
       $$('#problems li').forEach((x) => x.classList.toggle('off', !v.problems.has(x.dataset.problem)));
+      $('#problems-title').textContent = `Problemzonen · ${wxSel === 'jetzt' ? 'jetzt' : W.SEASONS[wxSel].name}`;
+      $('#wx-card').insertAdjacentHTML('beforeend', `<button class="cta wx-show" id="wx-show">Problemzonen ${wxSel === 'jetzt' ? 'jetzt' : 'im ' + W.SEASONS[wxSel].name} anzeigen</button>`);
+      $('#wx-show').addEventListener('click', () => { setMode('probleme'); v.invalidate(); });
       v.invalidate();
     };
     $$('#wx-analyse button').forEach((b) =>
@@ -130,6 +132,7 @@
           $('#wx-card').innerHTML = '<span class="muted">Oben links eine Jahreszeit wählen oder „Jetzt“ – der Berg zeigt dann die Problemzonen dieser Jahreszeit.</span>';
           $$('#wx-analyse button').forEach((x) => x.classList.remove('active'));
           $$('#problems li').forEach((x) => x.classList.remove('off'));
+          $('#problems-title').textContent = 'Problemzonen · ganzjährig';
           v.invalidate();
           return;
         }
