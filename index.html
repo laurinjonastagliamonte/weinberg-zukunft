@@ -60,6 +60,23 @@
       <p class="note" id="data-note">Höhendaten aus eurem STL-Modell. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).</p>
       <h3>Zonen nach Neigung</h3>
       <ul class="zones" id="zones"></ul>
+      <h3>Wetter am Korber Kopf</h3>
+      <div class="seg wx" id="wx-analyse">
+        <button data-wx="jetzt">Jetzt</button>
+        <button data-wx="fruehling">Frühling</button>
+        <button data-wx="sommer">Sommer</button>
+        <button data-wx="herbst">Herbst</button>
+        <button data-wx="winter">Winter</button>
+      </div>
+      <label class="select wx-period">Zeitraum
+        <select id="wx-period">
+          <option value="heute">heute (1995–2024)</option>
+          <option value="2050">2050 (Klimamodelle)</option>
+          <option value="2075">2075 (Annahme)</option>
+          <option value="2125">2125 (Annahme)</option>
+        </select>
+      </label>
+      <div class="wx-card" id="wx-card"><span class="muted">Jahreszeit wählen oder „Jetzt“ für das aktuelle Wetter.</span></div>
       <h3>Problemzonen</h3>
       <ul class="zones problems" id="problems"></ul>
       <p class="note small-note">Aus der Geländelage abgeleitet (Senken, Hangrichtung, Wölbung, Einzugsgebiet), keine Messdaten. Später mit Wetter- und Bodendaten abgleichen.</p>
@@ -83,14 +100,22 @@
         <button data-variant="heute">Heute</button>
         <button data-variant="konzept" class="active">Wall-Mulde-System</button>
       </div>
+      <div class="seg wx" id="wx-sim">
+        <button data-wx="jetzt">Jetzt</button>
+        <button data-wx="fruehling">Frühling</button>
+        <button data-wx="sommer" class="active">Sommer</button>
+        <button data-wx="herbst">Herbst</button>
+        <button data-wx="winter">Winter</button>
+      </div>
       <label class="select">Zeitraum
         <select id="period">
-          <option value="heute">heute</option>
-          <option value="2050">2050</option>
-          <option value="2075">2075</option>
-          <option value="2125">2125</option>
+          <option value="heute">heute (1995–2024)</option>
+          <option value="2050">2050 (Klimamodelle)</option>
+          <option value="2075">2075 (Annahme)</option>
+          <option value="2125">2125 (Annahme)</option>
         </select>
       </label>
+      <p class="wx-line" id="wx-sim-line"></p>
       <div class="btnrow">
         <button class="btn primary" id="rain">Regen starten</button>
         <button class="btn" id="break">Dammbruch auslösen</button>
@@ -102,9 +127,10 @@
         <li><i class="line"></i>Damm mit Reben · <i class="line blue"></i>Mulde dahinter</li>
         <li><i style="background:#9FE0FF"></i>Öffnung im Damm (alle 100 m, versetzt) · helle Spur = Zickzack-Weg</li>
         <li><i class="ring"></i>Becken am Hangfuß</li>
-        <li><i style="background:#E5402A"></i>Dammbruch</li>
+        <li><i style="background:#E5402A"></i>Dammbruch · rote Pfeile: Wind</li>
+        <li><i style="background:#FFFFFF"></i>Schnee (unter 0 °C, bleibt liegen)</li>
       </ul>
-      <p class="note small">Zeitraum ändert nur die Regenstärke (Annahme als Platzhalter, bitte durch Klimadaten ersetzen).</p>
+      <p class="note small">Wetter: Open-Meteo, Mittel 1995–2024 für den Korber Kopf; 2050 aus zwei Klimamodellen; 2075/2125 Trend fortgeschrieben (Annahme). Jahreszeit und Zeitraum ändern Regenmenge, Bodenaufnahme, Wind und Schnee.</p>
       <button class="cta" data-goto="4">Weiter zur Empfehlung →</button>
     </aside>
     <div class="stats glass-dark" id="stats"></div>
@@ -116,6 +142,14 @@
       <canvas class="mountain" id="reco3d"></canvas>
       <div class="toolbar glass-dark zone-tabs" id="zone-tabs"></div>
       <aside class="side glass-dark" id="zone-detail"></aside>
+      <div class="plants-panel glass-dark" id="plants-panel">
+        <div class="pp-head">
+          <strong>Pflanzen am Berg</strong>
+          <span><button class="linkbtn" id="pp-all">alle</button> · <button class="linkbtn" id="pp-none">keine</button></span>
+        </div>
+        <div id="pp-groups"></div>
+        <p class="pp-info" id="pp-info">Pflanze wählen – sie wird am Berg als Grundform angezeigt.</p>
+      </div>
       <p class="hint">Klicke eine Zone auf dem Berg an · ziehen zum Drehen · <button class="linkbtn" data-toggle="labels">Beschriftung</button></p>
     </div>
     <div class="reco-more">
@@ -139,6 +173,8 @@
   <script src="js/korber-kopf-data.js"></script>
   <script src="js/terrain.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/plants.js"></script>
   <script src="js/render3d.js"></script>
   <script src="js/sim3d.js"></script>
   <script src="js/cover.js"></script>

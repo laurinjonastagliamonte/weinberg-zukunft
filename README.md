@@ -85,3 +85,22 @@ Jeder Damm hat alle **100 m eine Öffnung**, beim nächsten Damm ist sie um **50
 (`OPENING` in `js/terrain.js`). In der Simulation läuft das Wasser in der Mulde seitlich bis zur
 nächsten Öffnung, fällt eine Stufe tiefer und läuft wieder seitlich – ein eckiger Zickzack, der das
 Wasser bremst. Die helle Spur hinter jedem Tropfen zeigt diesen Weg.
+
+## Wetter (`js/weather.js`)
+
+- **Jahreszeiten:** Mittel 1995–2024 für den Gipfel des Korber Kopfs (48,8538 N / 9,3672 E) aus dem
+  Open-Meteo-Archiv (ERA5-Reanalyse, Rasterzelle ~470 m). Temperatur, Regen, Verdunstung, Frost-/Hitzetage, Sonne, Wind.
+- **2050:** Änderung 2041–2050 gegenüber 1995–2014, Mittel aus zwei Klimamodellen (EC_Earth3P_HR, MPI_ESM1_2_XR, Open-Meteo Climate API).
+- **2075 / 2125:** Trend aus 2050 fortgeschrieben – **Annahme**, keine Modelldaten.
+- **Jetzt:** live aus der Open-Meteo Forecast API (braucht Internet).
+- Analyse: Jahreszeit/Jetzt hebt die passenden Problemzonen hervor und zeigt den Wind als rote Pfeile.
+- Simulation: Jahreszeit/Jetzt ändert Regenmenge, Bodenaufnahme (trockener Sommerboden), Windversatz und Schnee unter 0 °C.
+
+Daten: Open-Meteo.com, CC BY 4.0.
+
+## Pflanzen am Berg (`js/plants.js`)
+
+In der Empfehlung lassen sich Pflanzen auswählen; sie erscheinen als Grundformen am 3D-Berg:
+Baum = Ring · Nutzbaum = Punkt · Busch = Dreieck · Kraut/Gras = Kreuz · Rebe = Strich · Muldenrand = Quadrat.
+Standortregeln (Kuppe innen/Mitte/außen, Steilgürtel, Damm, Öffnung, Mulde, Böschung, Einzelbaum, Hangfuß)
+und Problemzonen, die eine Pflanze meidet, stehen in `js/data.js` → `plantList`.

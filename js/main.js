@@ -97,6 +97,47 @@
       })
     );
     $$('.view-analyse [data-view3d]').forEach((b) => b.addEventListener('click', () => v.setView(b.dataset.view3d)));
+    // Wetter
+    let wxSel = null;
+    const showWx = async () => {
+      $$('#wx-analyse button').forEach((x) => x.classList.toggle('active', x.dataset.wx === wxSel));
+      if (!wxSel) return;
+      let problems, weather;
+      if (wxSel === 'jetzt') {
+        $('#wx-card').innerHTML = '<span class="muted">Lade aktuelles Wetter …</span>';
+        const n = await getLive();
+        $('#wx-card').innerHTML = liveCard(n);
+        problems = liveFocus(n);
+        weather = n ? { wind: n.wind, windDir: n.windDir } : null;
+      } else {
+        const s = W.seasonFor(wxSel, $('#wx-period').value);
+        $('#wx-card').innerHTML = seasonCard(s);
+        problems = W.SEASON_FOCUS[wxSel].problems;
+        weather = { wind: s.wind, windDir: s.windDir };
+      }
+      v.problems = new Set(problems);
+      v.weather = weather;
+      setMode('probleme');
+      $$('#problems li').forEach((x) => x.classList.toggle('off', !v.problems.has(x.dataset.problem)));
+      v.invalidate();
+    };
+    $$('#wx-analyse button').forEach((b) =>
+      b.addEventListener('click', () => {
+        wxSel = wxSel === b.dataset.wx ? null : b.dataset.wx;
+        if (!wxSel) {
+          v.weather = null;
+          v.problems = new Set(Object.keys(T.PROBLEMS));
+          $('#wx-card').innerHTML = '<span class="muted">Jahreszeit wählen oder „Jetzt“ für das aktuelle Wetter.</span>';
+          $$('#wx-analyse button').forEach((x) => x.classList.remove('active'));
+          $$('#problems li').forEach((x) => x.classList.remove('off'));
+          v.invalidate();
+          return;
+        }
+        showWx();
+      })
+    );
+    $('#wx-period').addEventListener('change', showWx);
+
     // Problemzonen
     const setMode = (m) => {
       v.mode = m;
@@ -124,6 +165,57 @@
       li.addEventListener('mouseleave', () => { v.problemHighlight = null; v.invalidate(); });
     });
     bindToggles('.view-analyse', v);
+  }
+
+  // ---------- Wetter ----------
+  const W = WB.weather;
+  let liveWx = null; // zuletzt geladenes Live-Wetter
+  async function getLive() {
+    if (!liveWx) liveWx = await W.fetchNow();
+    return liveWx;
+  }
+  const f1 = (v) => (Math.round(v * 10) / 10).toString().replace('.', ',');
+  function seasonCard(s) {
+    const per = W.PERIODS[s.period];
+    const focus = W.SEASON_FOCUS[s.key];
+    return `<span class="big">${f1(s.t)} °C</span>
+      <span class="muted">${s.name} · ${s.months} · ${per.name} (${per.note})</span>
+      <dl>
+        <dt>Tag / Nacht</dt><dd>${f1(s.tmax)} / ${f1(s.tmin)} °C</dd>
+        <dt>Regen</dt><dd>${Math.round(s.regen)} mm</dd>
+        <dt>Verdunstung</dt><dd>${s.verdunstung} mm</dd>
+        <dt>Frosttage</dt><dd>${Math.round(s.frostTage)}</dd>
+        <dt>Hitzetage (≥ 30 °C)</dt><dd>${f1(s.hitzeTage)}</dd>
+        <dt>Sonne</dt><dd>${s.sonne} h</dd>
+        <dt>Wind (Tagesspitze)</dt><dd>${f1(s.wind)} km/h aus ${W.dirName(s.windDir)}</dd>
+      </dl>
+      <div class="focus">${focus.text}</div>
+      <span class="src">${W.SOURCE}</span>`;
+  }
+  function liveCard(n) {
+    if (!n) return '<span class="muted">Live-Wetter konnte nicht geladen werden (keine Internetverbindung?).</span>';
+    const t = new Date(n.time);
+    return `<span class="big">${f1(n.t)} °C</span>
+      <span class="muted">Jetzt am Korber Kopf · ${n.text} · ${t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
+      <dl>
+        <dt>Niederschlag gerade</dt><dd>${f1(n.regen)} mm</dd>
+        <dt>Regen letzte 7 Tage</dt><dd>${Math.round(n.regen7)} mm</dd>
+        <dt>Luftfeuchte</dt><dd>${n.feuchte} %</dd>
+        <dt>Wind</dt><dd>${f1(n.wind)} km/h aus ${W.dirName(n.windDir)} (Böen ${f1(n.boeen)})</dd>
+        <dt>Boden (0–1 cm)</dt><dd>${f1(n.bodenT)} °C · ${Math.round(n.boden * 100)} % Wasser</dd>
+      </dl>
+      <div class="focus">${n.t <= 0 ? 'Frost: Kaltluft sammelt sich jetzt in den Senken.' : n.regen > 0 ? 'Es regnet gerade – Mulden füllen sich.' : n.regen7 < 5 ? 'Seit einer Woche kaum Regen: Boden trocknet aus.' : 'Ruhige Lage.'}</div>
+      <span class="src">Open-Meteo Live (CC BY 4.0)</span>`;
+  }
+  // Problemzonen passend zum Wetter
+  function liveFocus(n) {
+    if (!n) return ['frost', 'trocken', 'feucht', 'wind'];
+    const p = [];
+    if (n.t <= 2) p.push('frost');
+    if (n.regen7 < 5 && n.t > 10) p.push('trocken');
+    if (n.regen > 0 || n.regen7 > 25) p.push('feucht');
+    if (n.wind > 20 || n.boeen > 40) p.push('wind');
+    return p.length ? p : ['wind'];
   }
 
   // Schalter „Konzept“ und „Beschriftung“
@@ -166,7 +258,49 @@
         v.setView(b.dataset.v3);
       })
     );
-    $('#period').addEventListener('change', (e) => (sim.factor = WB.content.rainFactor[e.target.value]));
+    let simWx = 'sommer';
+    const applySimWx = async () => {
+      $$('#wx-sim button').forEach((x) => x.classList.toggle('active', x.dataset.wx === simWx));
+      const period = $('#period').value;
+      const AVG = 214; // mittlerer Regen je Jahreszeit (mm)
+      if (simWx === 'jetzt') {
+        $('#wx-sim-line').textContent = 'Lade aktuelles Wetter …';
+        const n = await getLive();
+        if (!n) {
+          $('#wx-sim-line').textContent = 'Live-Wetter nicht erreichbar – es wird ein typischer Starkregen gezeigt.';
+          Object.assign(sim, { factor: 1, soakFactor: 1, snow: false, windX: 0, windY: 0 });
+        } else {
+          const k = W.PERIODS[period].k;
+          // Regen gerade? dann nach Stärke, sonst ein typischer Schauer; trockener Boden nimmt schlechter auf
+          sim.factor = n.regen > 0 ? Math.min(2.5, 0.6 + n.regen * 1.5) : 1;
+          sim.soakFactor = (n.regen7 < 5 ? 1.35 : n.regen7 > 25 ? 1.2 : 1) * (1 + 0.08 * k);
+          sim.snow = n.t <= 0;
+          setWind(n.wind, n.windDir);
+          $('#wx-sim-line').textContent = `Jetzt: ${f1(n.t)} °C, ${n.text}, Wind ${f1(n.wind)} km/h aus ${W.dirName(n.windDir)}. ` +
+            (sim.snow ? 'Unter 0 °C – es fällt Schnee.' : n.regen > 0 ? `Es regnet (${f1(n.regen)} mm).` : 'Gerade kein Regen – „Regen starten“ zeigt einen typischen Schauer.');
+        }
+      } else {
+        const s = W.seasonFor(simWx, period);
+        sim.factor = s.regen / AVG;
+        // Sommer: Verdunstung > Regen → harter, trockener Boden; Hitze verstärkt das
+        sim.soakFactor = 1 + Math.max(0, (s.verdunstung - s.regen) / 400) + s.hitzeTage * 0.02;
+        sim.snow = simWx === 'winter' && s.tmin <= 0;
+        setWind(s.wind, s.windDir);
+        $('#wx-sim-line').textContent = `${s.name} ${W.PERIODS[period].name}: ${Math.round(s.regen)} mm Regen, ${f1(s.t)} °C im Mittel, ` +
+          `${Math.round(s.frostTage)} Frosttage, Wind aus ${W.dirName(s.windDir)}.` + (sim.snow ? ' Nachts unter 0 °C: ein Teil fällt als Schnee.' : '');
+      }
+      v.weather = { wind: simWx === 'jetzt' && liveWx ? liveWx.wind : W.SEASONS[simWx]?.wind || 0, windDir: simWx === 'jetzt' && liveWx ? liveWx.windDir : W.SEASONS[simWx]?.windDir || 0 };
+      v.invalidate();
+    };
+    function setWind(kmh, dir) {
+      const r = ((dir + 180) * Math.PI) / 180; // Wind weht dorthin
+      const d = kmh * 1.5;
+      sim.windX = Math.sin(r) * d;
+      sim.windY = -Math.cos(r) * d;
+    }
+    $$('#wx-sim button').forEach((b) => b.addEventListener('click', () => { simWx = b.dataset.wx; applySimWx(); }));
+    $('#period').addEventListener('change', applySimWx);
+    applySimWx();
     $('#rain').addEventListener('click', () => { sim.startRain(); loop(); });
     $('#break').addEventListener('click', () => { if (sim.breakWall()) loop(); refresh(); });
     $('#reset').addEventListener('click', () => { sim.reset(); refresh(); });
@@ -209,6 +343,7 @@
     const v = (views.reco = new WB.Mountain3D($('#reco3d'), T, { mode: 'reco' }));
     v.showConcept = true;
     v.onPick = (hit) => selectZone(hit.zone);
+    initPlants(v);
     bindToggles('.view-reco', v);
     $('#zone-tabs').innerHTML = stats
       .map((z) => `<button data-zone="${z.key}"><i style="background:${z.color}"></i>${z.name}</button>`)
@@ -229,6 +364,51 @@
       .join('');
     selectZone(state.zone);
   }
+  // Pflanzen auswählen und am Berg zeigen
+  const plantSel = new Set();
+  let plantActive = null;
+  let placed = [];
+  function initPlants(v) {
+    placed = WB.plants.placePlants(T, WB.content.plantList);
+    v.onOverlay = (ctx, view) => WB.plants.drawPlants(ctx, view, placed, plantSel, plantActive);
+    const groups = {};
+    for (const p of placed) (groups[p.form] ||= []).push(p);
+    $('#pp-groups').innerHTML = Object.entries(WB.plants.FORMS)
+      .filter(([f]) => groups[f])
+      .map(([f, g]) => `<div class="pp-group"><span>${g.name}</span>${groups[f]
+        .map((p) => `<button class="pp-chip${p.cells.length ? '' : ' none'}" data-plant="${p.id}">${WB.plants.icon(p.form)}${p.name}</button>`)
+        .join('')}</div>`)
+      .join('');
+    $$('#pp-groups .pp-chip').forEach((b) => b.addEventListener('click', () => togglePlant(+b.dataset.plant)));
+    $('#pp-all').addEventListener('click', () => { placed.forEach((p) => plantSel.add(p.id)); plantActive = null; refreshPlants(); });
+    $('#pp-none').addEventListener('click', () => { plantSel.clear(); plantActive = null; refreshPlants(); });
+  }
+  function togglePlant(id) {
+    if (plantSel.has(id) && plantActive === id) { plantSel.delete(id); plantActive = null; }
+    else { plantSel.add(id); plantActive = id; }
+    refreshPlants();
+  }
+  function refreshPlants() {
+    $$('.pp-chip').forEach((b) => {
+      const id = +b.dataset.plant;
+      b.classList.toggle('on', plantSel.has(id) && plantActive !== id);
+      b.classList.toggle('active', plantActive === id);
+    });
+    $$('#zone-detail .chip[data-plant]').forEach((c) => c.classList.toggle('on', plantSel.has(+c.dataset.plant)));
+    const p = placed.find((x) => x.id === plantActive);
+    $('#pp-info').innerHTML = p
+      ? `<strong>${p.name}</strong> · ${p.info} · ${p.cells.length ? `${p.zones.join(', ')} · ${p.cells.length} Standorte` : 'kein passender Standort im Ausschnitt'}` +
+        (p.avoided ? ` · ${p.avoided} Stellen ausgelassen (${(p.meide || []).map((m) => T.PROBLEMS[m].name).join(', ')})` : '')
+      : plantSel.size
+        ? `${plantSel.size} Pflanzen sichtbar. Klick auf eine Pflanze hebt sie gelb hervor, zweiter Klick blendet sie aus.`
+        : 'Pflanze wählen – sie wird am Berg als Grundform angezeigt.';
+    // mit Pflanzen das Konzept-Gitter ausblenden, damit die Grundformen lesbar sind
+    const v = views.reco;
+    const conceptOn = plantSel.size === 0;
+    if (v.showConcept !== conceptOn) { v.showConcept = conceptOn; v.invalidate(); }
+    else v.draw();
+  }
+
   function selectZone(key) {
     state.zone = key;
     const v = views.reco;
@@ -238,7 +418,12 @@
     const z = stats.find((s) => s.key === key);
     const c = WB.content.zones[key] || WB.content.ortInfo;
     const groups = Object.entries(c.plants)
-      .map(([g, list]) => `<div class="group">${g}</div><div class="chips dark">${list.map((p) => `<span class="chip">${p}</span>`).join('')}</div>`)
+      .map(([g, list]) => `<div class="group">${g}</div><div class="chips dark">${list
+        .map((name) => {
+          const pl = placed.find((x) => x.name === name || x.name.split(' & ').includes(name) || (name === 'Reben alle 3 m' && x.name === 'Reben') || (name === 'Hasel' && x.name === 'Haselnuss'));
+          return pl ? `<span class="chip clickable${plantSel.has(pl.id) ? ' on' : ''}" data-plant="${pl.id}">${WB.plants.icon(pl.form)} ${name}</span>` : `<span class="chip">${name}</span>`;
+        })
+        .join('')}</div>`)
       .join('');
     const probs =
       key === 'ort'
@@ -259,6 +444,7 @@
       ${groups}
       ${probs}
       ${c.open ? `<div class="open">${c.open}</div>` : ''}`;
+    $$('#zone-detail .chip[data-plant]').forEach((c) => c.addEventListener('click', () => togglePlant(+c.dataset.plant)));
   }
 
   // ---------- Start ----------

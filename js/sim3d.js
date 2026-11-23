@@ -33,7 +33,11 @@
     constructor(terrain) {
       this.t = terrain;
       this.variant = 'konzept';
-      this.factor = 1;
+      this.factor = 1; // Regenstärke (Jahreszeit, Zeitraum, Live-Wetter)
+      this.soakFactor = 1; // >1: Boden nimmt schlechter auf (z. B. ausgetrocknet im Sommer)
+      this.snow = false; // unter 0 °C fällt Schnee: bleibt liegen, fließt nicht ab
+      this.windX = 0; // Windversatz der Tropfen (m pro Fall), aus Windrichtung/-stärke
+      this.windY = 0;
       this.reset();
     }
 
@@ -43,7 +47,7 @@
       this.raining = false;
       this.rainLeft = 0;
       this.parts = [];
-      this.stats = { regen: 0, versickert: 0, geleitet: 0, ort: 0 };
+      this.stats = { regen: 0, versickert: 0, geleitet: 0, ort: 0, schnee: 0 };
       this.broken = new Uint8Array(t.N * t.N);
       this.becken = t.BECKEN.map((b) => ({ ...b, vol: 0 }));
       this.lastBreak = null;
@@ -100,7 +104,7 @@
           const x = Math.random() * S;
           const y = Math.random() * S;
           if (t.zoneAt(x, y) === 'ort') continue; // Regen im Ort zählt nicht zum Hang
-          this.parts.push({ x, y, fall: 1, mode: 'down', trail: [] });
+          this.parts.push({ x: x - this.windX, y: y - this.windY, sx: x, sy: y, fall: 1, mode: 'down', trail: [], snow: this.snow });
           this.stats.regen++;
         }
         this.rainLeft -= dt;
@@ -108,13 +112,23 @@
       }
 
       const inf = PARAMS.infil[this.variant];
-      const soak = Math.pow(this.factor, 0.8); // Starkregen: Boden kann weniger aufnehmen
+      const soak = Math.pow(this.factor, 0.8) * this.soakFactor; // Starkregen / trockener Boden: nimmt weniger auf
       const konzept = this.variant === 'konzept';
       const e = 5;
       const keep = [];
       for (const p of this.parts) {
         if (p.fall > 0) {
-          p.fall -= dt * 2;
+          p.fall -= dt * (p.snow ? 0.8 : 2);
+          // Wind trägt die Tropfen schräg
+          p.x = p.sx - this.windX * p.fall;
+          p.y = p.sy - this.windY * p.fall;
+          keep.push(p);
+          continue;
+        }
+        if (p.snow) {
+          // Schnee bleibt liegen und schmilzt langsam in den Boden
+          p.age = (p.age || 0) + dt;
+          if (p.age > 6 + Math.random() * 6) { this.stats.versickert++; continue; }
           keep.push(p);
           continue;
         }
@@ -263,9 +277,23 @@
     }
     for (const p of model.parts) {
       const z = t.heightAt(p.x, p.y);
+      if (p.snow && p.fall <= 0) {
+        const a = view.project(p.x, p.y, z + 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(a[0] - 1.5, a[1] - 1.5, 3, 3);
+        continue;
+      }
+      if (p.fall > 0 && p.snow) {
+        const a = view.project(p.x, p.y, z + p.fall * 80);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.beginPath();
+        ctx.arc(a[0], a[1], 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        continue;
+      }
       if (p.fall > 0) {
         const a = view.project(p.x, p.y, z + p.fall * 80);
-        const b = view.project(p.x, p.y, z + p.fall * 80 + 22);
+        const b = view.project(p.x + model.windX * 0.25, p.y + model.windY * 0.25, z + p.fall * 80 + 22);
         ctx.strokeStyle = 'rgba(92,124,255,0.9)';
         ctx.lineWidth = 1.4;
         ctx.beginPath();

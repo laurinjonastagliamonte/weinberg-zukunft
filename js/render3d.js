@@ -248,6 +248,9 @@
         ctx.stroke();
       }
 
+      // Wind (aus Wetter): Pfeile in Windrichtung über den Berg
+      if (this.weather && this.weather.wind > 0) this._drawWind(ctx);
+
       // Gipfelmarke
       const s = this.project(t.SUMMIT.x, t.SUMMIT.y, t.TOP);
       ctx.fillStyle = '#F1E62B';
@@ -421,6 +424,35 @@
       if (this.showLabels) this._drawLabels(ctx);
     }
 
+    _drawWind(ctx) {
+      const t = this.t;
+      const w = this.weather;
+      // Windrichtung = woher der Wind kommt; Pfeil zeigt wohin
+      const r = ((w.windDir + 180) * Math.PI) / 180;
+      const dx = Math.sin(r), dy = -Math.cos(r);
+      const len = 60 + w.wind * 5;
+      ctx.strokeStyle = 'rgba(229,64,42,0.85)';
+      ctx.fillStyle = 'rgba(229,64,42,0.85)';
+      ctx.lineWidth = 1.4;
+      for (let gy = 250; gy < t.SIZE; gy += 500)
+        for (let gx = 250; gx < t.SIZE; gx += 500) {
+          const x0 = gx - (dx * len) / 2, y0 = gy - (dy * len) / 2;
+          const x1 = gx + (dx * len) / 2, y1 = gy + (dy * len) / 2;
+          const a = this.project(x0, y0, t.heightAt(x0, y0) + 25);
+          const b = this.project(x1, y1, t.heightAt(x1, y1) + 25);
+          ctx.beginPath();
+          ctx.moveTo(a[0], a[1]);
+          ctx.lineTo(b[0], b[1]);
+          ctx.stroke();
+          const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+          ctx.beginPath();
+          ctx.moveTo(b[0] + Math.cos(ang) * 6, b[1] + Math.sin(ang) * 6);
+          ctx.lineTo(b[0] + Math.cos(ang + 2.5) * 6, b[1] + Math.sin(ang + 2.5) * 6);
+          ctx.lineTo(b[0] + Math.cos(ang - 2.5) * 6, b[1] + Math.sin(ang - 2.5) * 6);
+          ctx.fill();
+        }
+    }
+
     _drawProblems(ctx) {
       const t = this.t;
       const keys = Object.keys(t.PROBLEMS).filter((k) => this.problems.has(k) && (!this.problemHighlight || this.problemHighlight === k));
@@ -433,7 +465,7 @@
         for (let k = 0; k < t.N * t.N; k++) {
           if (!(t.PROBLEM[k] & bit)) continue;
           const p = this.P[k];
-          ctx.fillRect(p[0] + ox - 1.1, p[1] + oy - 1.1, 2.2, 2.2);
+          ctx.fillRect(p[0] + ox - 1.6, p[1] + oy - 1.6, 3.2, 3.2);
         }
       }
       ctx.globalAlpha = 1;

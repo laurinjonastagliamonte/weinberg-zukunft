@@ -227,3 +227,31 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: 
 .side .probs { margin-top: 14px; display: grid; gap: 8px; }
 .side .prob { border-left: 3px solid; padding: 6px 10px; background: rgba(255, 255, 255, 0.05); border-radius: 0 10px 10px 0; font-size: 13px; line-height: 1.45; }
 .side .prob b { display: block; }
+
+/* ---------- Wetter ---------- */
+.seg.wx { display: flex; flex-wrap: wrap; margin: 4px 0 10px; }
+.seg.wx button { padding: 7px 10px; font-size: 13px; }
+.wx-period { margin-bottom: 10px; }
+.wx-card { background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px; font-size: 13px; line-height: 1.5; }
+.wx-card .big { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; display: block; }
+.wx-card dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 8px 0; }
+.wx-card dt { color: #999; }
+.wx-card dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.wx-card .focus { border-left: 3px solid #E5402A; padding-left: 8px; margin-top: 8px; color: #ddd; }
+.wx-card .src { color: #777; font-size: 11px; margin-top: 6px; display: block; }
+.wx-line { font-size: 13px; color: #bbb; margin: 2px 0 6px; min-height: 1.4em; }
+
+/* ---------- Pflanzen ---------- */
+.plants-panel { position: absolute; left: 24px; bottom: 54px; width: min(460px, 40vw); max-height: 38vh; overflow: auto; padding: 14px 16px; font-size: 13px; }
+.pp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.pp-group { margin-top: 8px; }
+.pp-group > span { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999; margin-bottom: 5px; }
+.pp-chip { display: inline-flex; align-items: center; gap: 6px; margin: 0 5px 5px 0; padding: 5px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.04); color: #ddd; cursor: pointer; font-size: 12px; }
+.pp-chip:hover { border-color: rgba(255,255,255,0.5); }
+.pp-chip.on { background: #fff; color: #111; border-color: #fff; }
+.pp-chip.active { background: #F1E62B; color: #111; border-color: #F1E62B; }
+.pp-chip.none { opacity: 0.45; }
+.pp-info { margin: 8px 0 0; color: #bbb; min-height: 1.4em; }
+.chip.clickable { cursor: pointer; }
+.chip.clickable.on { background: #fff; color: #111; }
+svg.pi { flex: none; }
