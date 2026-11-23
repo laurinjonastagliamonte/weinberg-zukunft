@@ -255,3 +255,7 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: 
 .chip.clickable { cursor: pointer; }
 .chip.clickable.on { background: #fff; color: #111; }
 svg.pi { flex: none; }
+
+.toolbar-2 { top: calc(var(--topbar) + 76px); align-items: center; }
+.toolbar-2 .tb-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888; padding: 0 8px 0 6px; }
+.toolbar-2 button.active { background: #fff; color: #111; }

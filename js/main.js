@@ -9,7 +9,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-  const state = { step: 1, mountain: null, zone: 'kuppe' };
+  const state = { step: 1, mountain: null, zone: null };
   const views = {}; // 3D-Ansichten je Schritt
   let sim = null;
   let cover = null;
@@ -127,7 +127,7 @@
         if (!wxSel) {
           v.weather = null;
           v.problems = new Set(Object.keys(T.PROBLEMS));
-          $('#wx-card').innerHTML = '<span class="muted">Jahreszeit wählen oder „Jetzt“ für das aktuelle Wetter.</span>';
+          $('#wx-card').innerHTML = '<span class="muted">Oben links eine Jahreszeit wählen oder „Jetzt“ – der Berg zeigt dann die Problemzonen dieser Jahreszeit.</span>';
           $$('#wx-analyse button').forEach((x) => x.classList.remove('active'));
           $$('#problems li').forEach((x) => x.classList.remove('off'));
           v.invalidate();
@@ -362,7 +362,8 @@
     ]
       .map(([a, b]) => `<li><span>${a}</span><strong>${b}</strong></li>`)
       .join('');
-    selectZone(state.zone);
+    if (state.zone) selectZone(state.zone);
+    else $('#zone-detail').innerHTML = '<p class="eyebrow">04 · Empfehlung</p><h2>Zone wählen</h2><p class="muted">Klicke oben eine Zone an oder direkt auf den Berg. Links kannst du Pflanzen auswählen – sie erscheinen am Berg.</p>';
   }
   // Pflanzen auswählen und am Berg zeigen
   const plantSel = new Set();

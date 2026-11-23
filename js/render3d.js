@@ -289,22 +289,6 @@
       const hl = this.highlight;
       const on = (z) => !hl || hl === z;
 
-      // Kuppe: Wald von innen nach außen (innen große Pionierbäume, außen Büsche)
-      if (on('kuppe')) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-        ctx.lineWidth = 0.8;
-        for (let j = 0; j < t.N; j += 2)
-          for (let i = (j / 2) % 2; i < t.N; i += 2) {
-            const k = j * t.N + i;
-            if (t.ZONE[k] !== 'kuppe') continue;
-            const inner = t.H[k] > t.maxH - 7;
-            const p = this.P[k];
-            ctx.beginPath();
-            ctx.arc(p[0], p[1] - (inner ? 3 : 1.5), inner ? 2.6 : 1.4, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-      }
-
       for (const kl of K) {
         if (!on(kl.zone)) continue;
         if (kl.zone === 'steil') {
@@ -546,7 +530,7 @@
       }
       const at = (k) => [(k % N) * t.CELL, Math.floor(k / N) * t.CELL];
       const list = [
-        ['Schwammkuppe: Wald von innen nach außen', [t.SUMMIT.x, t.SUMMIT.y], [-40, -40]],
+        ['Schwammkuppe', [t.SUMMIT.x, t.SUMMIT.y], [-40, -40]],
         ['Steilgürtel: enge Rinnen leiten das Wasser quer', at(steil), [40, -50]],
         ['Damm mit Reben · Mulde dahinter', at(mittel), [-60, 40]],
         ['Öffnungen versetzt: Wasser läuft im Zickzack', at(mittel), [-60, 64]],

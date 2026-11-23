@@ -53,6 +53,14 @@
       <button data-toggle="concept">Konzept</button>
       <button data-toggle="labels">Beschriftung</button>
     </div>
+    <div class="toolbar glass-dark toolbar-2" id="wx-analyse" aria-label="Jahreszeit">
+      <span class="tb-label">Jahreszeit</span>
+      <button data-wx="jetzt">Jetzt</button>
+      <button data-wx="fruehling">Frühling</button>
+      <button data-wx="sommer">Sommer</button>
+      <button data-wx="herbst">Herbst</button>
+      <button data-wx="winter">Winter</button>
+    </div>
     <aside class="side glass-dark">
       <p class="eyebrow">02 · Analyse</p>
       <h2 id="mountain-name">Korber Kopf</h2>
@@ -61,13 +69,6 @@
       <h3>Zonen nach Neigung</h3>
       <ul class="zones" id="zones"></ul>
       <h3>Wetter am Korber Kopf</h3>
-      <div class="seg wx" id="wx-analyse">
-        <button data-wx="jetzt">Jetzt</button>
-        <button data-wx="fruehling">Frühling</button>
-        <button data-wx="sommer">Sommer</button>
-        <button data-wx="herbst">Herbst</button>
-        <button data-wx="winter">Winter</button>
-      </div>
       <label class="select wx-period">Zeitraum
         <select id="wx-period">
           <option value="heute">heute (1995–2024)</option>
@@ -76,7 +77,7 @@
           <option value="2125">2125 (Annahme)</option>
         </select>
       </label>
-      <div class="wx-card" id="wx-card"><span class="muted">Jahreszeit wählen oder „Jetzt“ für das aktuelle Wetter.</span></div>
+      <div class="wx-card" id="wx-card"><span class="muted">Oben links eine Jahreszeit wählen oder „Jetzt“ – der Berg zeigt dann die Problemzonen dieser Jahreszeit.</span></div>
       <h3>Problemzonen</h3>
       <ul class="zones problems" id="problems"></ul>
       <p class="note small-note">Aus der Geländelage abgeleitet (Senken, Hangrichtung, Wölbung, Einzugsgebiet), keine Messdaten. Später mit Wetter- und Bodendaten abgleichen.</p>
