@@ -82,6 +82,12 @@
     $('#mountain-name').textContent = T.name;
     $('#mountain-place').textContent = `${T.place} · Gipfel ${Math.round(T.TOP)} m · Ausschnitt ${T.SIZE / 1000} × ${T.SIZE / 1000} km`;
     $('#mountain-lagen').textContent = `Lagen: ${WB.site.lagen}`;
+    $('#stl-info').textContent = `500 × 500 mm, Höhe unverzerrt (bis ${Math.round((T.maxH - T.minH) / 4 + 5)} mm inkl. 5 mm Sockel) – zum 3D-Druck oder Fräsen.`;
+    const stlBtn = $('#stl');
+    if (!stlBtn.dataset.bound) {
+      stlBtn.dataset.bound = '1';
+      stlBtn.addEventListener('click', () => WB.stl.downloadSTL(T));
+    }
     $('#wx-title').textContent = `Wetter am ${T.name}`;
     if (!WB.site.stl)
       $('#data-note').textContent = 'Höhendaten aus Geländekacheln (AWS Terrain Tiles), Ortsfläche aus OpenStreetMap – im Browser gebaut, gröber als euer STL-Modell. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).';

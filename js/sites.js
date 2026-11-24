@@ -7,14 +7,14 @@
  * Korber Kopf: Höhen aus eurem STL-Modell (js/korber-kopf-data.js).
  * Alle anderen Berge: werden beim Öffnen im Browser gebaut –
  *   Höhen: AWS Terrain Tiles (Terrarium-Kacheln, Zoomstufe 15, Pixel ca. 3 m), 2 × 2 km, 10-m-Raster
- *   Ort:   OpenStreetMap (Wohn-, Gewerbe-, Industrieflächen und Gebäude) über die Overpass API
+ *   Ort:   OpenStreetMap (Wohn-, Gewerbe- und Industrieflächen) über die Overpass API
  * Das Ergebnis hat dasselbe Format wie korber-kopf-data.js und wird im Browser zwischengespeichert.
  *
  * Mittelpunkte: Schwerpunkt der Rebflächen (OpenStreetMap landuse=vineyard) am jeweiligen Hang.
  */
 (function () {
   const WB = (window.WB = window.WB || {});
-  const V = '20261124c'; // Version der Skripte (gegen alten Browser-Cache)
+  const V = '20261124d'; // Version der Skripte (gegen alten Browser-Cache)
 
   const SITES = [
     { id: 'korber-kopf', ort: 'Korb', name: 'Korber Kopf', place: 'Korb, Rems-Murr-Kreis', lat: 48.8538, lon: 9.3672, stl: true,
@@ -135,7 +135,7 @@
     const bb = `${so},${w},${n},${e}`;
     const j = await overpass(
       `[out:json][timeout:50];(way["landuse"~"^(residential|commercial|industrial|retail)$"](${bb});` +
-        `relation["landuse"~"^(residential|commercial|industrial|retail)$"](${bb});way["building"](${bb}););out geom;`
+        `relation["landuse"~"^(residential|commercial|industrial|retail)$"](${bb}););out geom;`
     );
     const ml = mLon(s.lat);
     const toIJ = (p) => [(p.lon - s.lon) * ml / CELL + (N - 1) / 2, (s.lat - p.lat) * M_LAT / CELL + (N - 1) / 2];
@@ -223,7 +223,7 @@
   }
 
   // ---------- Start ----------
-  const SCRIPTS = ['terrain', 'data', 'weather', 'plants', 'render3d', 'sim3d', 'cover', 'main'];
+  const SCRIPTS = ['terrain', 'data', 'weather', 'plants', 'render3d', 'sim3d', 'cover', 'stl', 'main'];
   function loadScripts() {
     return SCRIPTS.reduce(
       (p, n) => p.then(() => new Promise((ok, no) => {

@@ -107,3 +107,20 @@ zum Ort – also Berg und naher Hangfuß, nicht weit draußen in der Landschaft.
 Baum = Ring · Nutzbaum = Punkt · Busch = Dreieck · Kraut/Gras = Kreuz · Rebe = Strich · Muldenrand = Quadrat.
 Standortregeln (Kuppe innen/Mitte/außen, Steilgürtel, Damm, Öffnung, Mulde, Böschung, Einzelbaum, Hangfuß)
 und Problemzonen, die eine Pflanze meidet, stehen in `js/data.js` → `plantList`.
+
+## Weitere Weinberge im Remstal (`js/sites.js`)
+
+Auf der Startseite lassen sich 11 Berge wählen (Einzellagen nach Weinbergsrolle, Großlagen Kopf und Wartbühl,
+zu Bergen zusammengefasst). Der Korber Kopf nutzt euer STL-Modell. Für alle anderen Berge wird das Modell beim
+Öffnen im Browser gebaut und dort zwischengespeichert:
+
+- Höhen: AWS Terrain Tiles (Terrarium, Zoom 15), 2 × 2 km, 10-m-Raster, leicht geglättet
+- Ort: OpenStreetMap (Wohn-, Gewerbe- und Industrieflächen) über die Overpass API
+- Mitte des Ausschnitts: Schwerpunkt der Rebflächen (OpenStreetMap `landuse=vineyard`)
+- Gipfel: höchster Punkt im Umkreis von 650 m um die Mitte
+- Klimamittel: vom Korber Kopf übernommen (gleiches Tal); „Jetzt“-Wetter live für den jeweiligen Berg
+
+## 3D-Modell 1:4000 (`js/stl.js`)
+
+In der Analyse lässt sich für jeden Berg ein STL-Modell herunterladen: Maßstab 1:4000 in Lage und Höhe
+(unverzerrt), 500 × 500 mm, 5 mm Sockel, wasserdicht – zum 3D-Druck oder Fräsen.
