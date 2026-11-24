@@ -41,6 +41,10 @@
   $$('[data-goto]').forEach((b) => b.addEventListener('click', () => go(+b.dataset.goto)));
 
   // ---------- 01 Suche ----------
+  $('#suggestions').innerHTML = WB.SITES.map(
+    (s) => `<li data-mountain="${s.id}" class="sugg${s.id === WB.site.id ? ' current' : ''}">
+      <strong>${s.name}</strong><span>${s.lagen}</span></li>`
+  ).join('');
   const input = $('#search');
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
@@ -61,6 +65,11 @@
     if (!e.target.closest('.cover-search')) $('.cover-search').classList.remove('open');
   });
   function choose(id) {
+    // anderer Berg: Seite mit diesem Berg neu laden (Geländemodell wird dann gebaut)
+    if (id !== WB.site.id) {
+      location.href = `${location.pathname}?berg=${id}#2`;
+      return;
+    }
     state.mountain = id;
     updateNav();
     go(2);
@@ -72,6 +81,10 @@
   function initAnalyse() {
     $('#mountain-name').textContent = T.name;
     $('#mountain-place').textContent = `${T.place} · Gipfel ${Math.round(T.TOP)} m · Ausschnitt ${T.SIZE / 1000} × ${T.SIZE / 1000} km`;
+    $('#mountain-lagen').textContent = `Lagen: ${WB.site.lagen}`;
+    $('#wx-title').textContent = `Wetter am ${T.name}`;
+    if (!WB.site.stl)
+      $('#data-note').textContent = 'Höhendaten aus Geländekacheln (AWS Terrain Tiles), Ortsfläche aus OpenStreetMap – im Browser gebaut, gröber als euer STL-Modell. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).';
     if (views.analyse) return views.analyse.resize();
     const v = (views.analyse = new WB.Mountain3D($('#mountain'), T));
     $('#zones').innerHTML = stats
@@ -199,7 +212,7 @@
     if (!n) return '<span class="muted">Live-Wetter konnte nicht geladen werden (keine Internetverbindung?).</span>';
     const t = new Date(n.time);
     return `<span class="big">${f1(n.t)} °C</span>
-      <span class="muted">Jetzt am Korber Kopf · ${n.text} · ${t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
+      <span class="muted">Jetzt am ${T.name} · ${n.text} · ${t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
       <dl>
         <dt>Niederschlag gerade</dt><dd>${f1(n.regen)} mm</dd>
         <dt>Regen letzte 7 Tage</dt><dd>${Math.round(n.regen7)} mm</dd>
@@ -431,5 +444,5 @@
 
   // für Tests: #2, #3, #4 in der URL springt direkt zum Schritt
   const h = parseInt(location.hash.slice(1), 10);
-  if (h > 1) { state.mountain = 'korber-kopf'; updateNav(); go(h); }
+  if (h > 1) { state.mountain = WB.site.id; updateNav(); go(h); }
 })();

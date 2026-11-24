@@ -1,5 +1,5 @@
 /*
- * Wetter am Korber Kopf
+ * Wetter am Berg (Klimamittel vom Korber Kopf, live für den gewählten Berg)
  * ---------------------
  * Jahreszeiten: Mittel 1995–2024 aus dem Open-Meteo-Archiv (ERA5-Reanalyse) für den Gipfel
  *   (48,8538 N / 9,3672 E, Rasterzelle ca. 470 m). Abgerufen am 24.11.2026.
@@ -11,8 +11,13 @@
 (function () {
   const WB = (window.WB = window.WB || {});
 
-  const LAT = 48.8538, LON = 9.3672;
-  const SOURCE = 'Open-Meteo (ERA5 1995–2024, CC BY 4.0)';
+  // Live-Wetter für den gewählten Berg; Klimamittel stammen vom Korber Kopf (alle Berge liegen
+  // im selben Tal, höchstens rund 10 km entfernt).
+  const site = WB.site || { lat: 48.8538, lon: 9.3672, stl: true };
+  const LAT = site.lat, LON = site.lon;
+  const SOURCE = site.stl
+    ? 'Open-Meteo (ERA5 1995–2024, CC BY 4.0)'
+    : 'Open-Meteo (ERA5 1995–2024, CC BY 4.0) · Klimamittel vom Korber Kopf übernommen (gleiches Tal)';
 
   // je Jahreszeit (Summen = Mittel pro Jahreszeit und Jahr)
   const SEASONS = {

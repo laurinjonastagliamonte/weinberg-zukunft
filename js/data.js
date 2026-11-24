@@ -46,7 +46,7 @@
       ort: null, // siehe ortInfo
     },
     ortInfo: {
-      idea: 'Der Ort Korb liegt am Hangfuß. Er ist nicht Teil der Bewirtschaftung, profitiert aber vom Konzept: Weniger Wasser schießt bei Starkregen den Hang hinunter.',
+      idea: `Die Bebauung (${(window.WB.site && window.WB.site.ort) || 'Korb'}) liegt am Hangfuß. Sie ist nicht Teil der Bewirtschaftung, profitiert aber vom Konzept: Weniger Wasser schießt bei Starkregen den Hang hinunter.`,
       measures: ['wird in der Simulation als Ziel des Abflusses gezählt', 'Fläche nur zur Orientierung eingeblendet'],
       plants: {},
     },

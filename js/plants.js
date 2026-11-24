@@ -36,9 +36,9 @@
       return { onDam, inMulde: !onDam && r > tol && r < md + tol * 1.5, x, y, line: Math.round(h / dh) };
     };
     return {
-      kuppeInnen: (k) => T.ZONE[k] === 'kuppe' && T.H[k] > T.maxH - 6,
-      kuppeMitte: (k) => T.ZONE[k] === 'kuppe' && T.H[k] <= T.maxH - 6 && T.H[k] > T.maxH - 11,
-      kuppeAussen: (k) => T.ZONE[k] === 'kuppe' && T.H[k] <= T.maxH - 11,
+      kuppeInnen: (k) => T.ZONE[k] === 'kuppe' && T.H[k] > T.TOP - 6,
+      kuppeMitte: (k) => T.ZONE[k] === 'kuppe' && T.H[k] <= T.TOP - 6 && T.H[k] > T.TOP - 11,
+      kuppeAussen: (k) => T.ZONE[k] === 'kuppe' && T.H[k] <= T.TOP - 11,
       steil: (k) => T.ZONE[k] === 'steil',
       damm: (k) => { const i = keyInfo(k); return !!i && i.onDam && !T.opening(i.x, i.y, i.line).open; },
       oeffnung: (k) => { const i = keyInfo(k); return !!i && i.onDam && T.opening(i.x, i.y, i.line).open; },

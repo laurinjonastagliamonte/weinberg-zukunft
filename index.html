@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Weinberg Zukunft – Weinberge zukunftsorientiert denken</title>
-  <link rel="stylesheet" href="styles.css?v=20261124b" />
+  <link rel="stylesheet" href="styles.css?v=20261124c" />
 </head>
 <body>
   <header class="topbar">
@@ -32,10 +32,7 @@
         <input id="search" type="text" placeholder="Welchen Berg möchtest du ansehen?" autocomplete="off" />
         <button class="go" id="go">Berg ansehen →</button>
         <ul class="suggestions" id="suggestions">
-          <li data-mountain="korber-kopf" class="sugg">
-            <strong>Korber Kopf</strong><span>Korb, Rems-Murr-Kreis · Höhendaten aus eurem 3D-Modell</span>
-          </li>
-          <li class="sugg disabled"><strong>Weitere Berge</strong><span>folgen mit echtem Geländemodell (DGM)</span></li>
+
         </ul>
       </div>
     </div>
@@ -71,10 +68,11 @@
       <p class="eyebrow">02 · Analyse</p>
       <h2 id="mountain-name">Korber Kopf</h2>
       <p class="muted" id="mountain-place"></p>
+      <p class="muted small" id="mountain-lagen"></p>
       <p class="note" id="data-note">Höhendaten aus eurem STL-Modell. Grenze Leiten / Versickern: 30 % Hangneigung (Steillage nach Weingesetz).</p>
       <h3>Zonen nach Neigung</h3>
       <ul class="zones" id="zones"></ul>
-      <h3>Wetter am Korber Kopf</h3>
+      <h3 id="wx-title">Wetter am Korber Kopf</h3>
       <label class="select wx-period">Zeitraum
         <select id="wx-period">
           <option value="heute">heute (1995–2024)</option>
@@ -153,14 +151,7 @@
     </div>
   </section>
 
-  <script src="js/korber-kopf-data.js?v=20261124b"></script>
-  <script src="js/terrain.js?v=20261124b"></script>
-  <script src="js/data.js?v=20261124b"></script>
-  <script src="js/weather.js?v=20261124b"></script>
-  <script src="js/plants.js?v=20261124b"></script>
-  <script src="js/render3d.js?v=20261124b"></script>
-  <script src="js/sim3d.js?v=20261124b"></script>
-  <script src="js/cover.js?v=20261124b"></script>
-  <script src="js/main.js?v=20261124b"></script>
+  <script src="js/korber-kopf-data.js?v=20261124c"></script>
+  <script src="js/sites.js?v=20261124c"></script>
 </body>
 </html>

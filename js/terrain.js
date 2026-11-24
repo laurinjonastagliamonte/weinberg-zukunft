@@ -1,7 +1,8 @@
 /*
  * Gelände-Modell
  * --------------
- * Lädt das Höhenraster aus js/korber-kopf-data.js (aus eurem STL-Modell) und berechnet:
+ * Lädt das Höhenraster (Korber Kopf: js/korber-kopf-data.js aus eurem STL-Modell; andere Berge:
+ * im Browser gebaut, siehe js/sites.js) und berechnet:
  * Hangneigung, Hangrichtung, Fließwege (Muldenlinien), Zonen, Höhenlinien, Keylines und das Hangprofil.
  *
  * Koordinaten: x nach Osten, y nach Süden, in Metern.
@@ -61,7 +62,17 @@
     if (H[k] > maxH) { maxH = H[k]; top = k; }
     if (H[k] < minH) minH = H[k];
   }
+  // Andere Berge: Gipfel = höchster Punkt im Umkreis summitR um die Mitte (die Rebfläche),
+  // damit nicht eine Hochfläche am Ausschnittrand als Gipfel gilt.
+  if (D.summitR) {
+    let best = -Infinity;
+    for (let k = 0; k < N * N; k++) {
+      const d = Math.hypot((k % N) * CELL - SIZE / 2, Math.floor(k / N) * CELL - SIZE / 2);
+      if (d <= D.summitR && H[k] > best) { best = H[k]; top = k; }
+    }
+  }
   const SUMMIT = { x: (top % N) * CELL, y: Math.floor(top / N) * CELL };
+  const TOP = H[top];
 
   function heightAt(x, y) {
     const fx = Math.min(N - 1.0001, Math.max(0, x / CELL));
@@ -113,7 +124,7 @@
     steil: { key: 'steil', name: 'Steilgürtel', sub: 'Leithang', range: 'über 30 %', water: 'Wasser leiten', color: '#FFFFFF' },
     mittel: { key: 'mittel', name: 'Mittelhang', sub: '', range: '18–30 %', water: 'bremsen & versickern', color: '#A8A8A8' },
     auslauf: { key: 'auslauf', name: 'Auslauf & Hangfuß', sub: '', range: 'unter 18 %', water: 'versickern lassen', color: '#5C5C5C' },
-    ort: { key: 'ort', name: 'Ort', sub: 'Korb', range: 'bebaut', water: 'wird durch das Konzept geschützt', color: '#2E2E2E' },
+    ort: { key: 'ort', name: 'Ort', sub: (WB.site && WB.site.ort) || 'Korb', range: 'bebaut', water: 'wird durch das Konzept geschützt', color: '#2E2E2E' },
   };
   const ZONE_ORDER = ['kuppe', 'steil', 'mittel', 'auslauf', 'ort'];
 
@@ -121,7 +132,7 @@
   for (let k = 0; k < N * N; k++) {
     const s = SLOPE[k];
     if (TOWN[k]) ZONE[k] = 'ort';
-    else if (H[k] >= maxH - THRESHOLDS.kuppeDrop && s < THRESHOLDS.mittel) ZONE[k] = 'kuppe';
+    else if (H[k] >= TOP - THRESHOLDS.kuppeDrop && s < THRESHOLDS.mittel) ZONE[k] = 'kuppe';
     else if (s >= THRESHOLDS.steil) ZONE[k] = 'steil';
     else if (s >= THRESHOLDS.mittel) ZONE[k] = 'mittel';
     else ZONE[k] = 'auslauf';
@@ -466,7 +477,7 @@
     place: D.place,
     source: D.source,
     synthetic: false,
-    SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
+    SIZE, N, CELL, SUMMIT, TOP, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
     TOWN, AREA, AREA_R, DIST, BECKEN, KEYLINE, KEY_DH, VIS, OPENING, alongS, opening, alongDir, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
     heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, waterPaths, zoneStats, contours, profile, bestProfileDir,

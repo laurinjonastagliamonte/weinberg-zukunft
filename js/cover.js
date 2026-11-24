@@ -16,10 +16,11 @@
     ['heute', 1.5], ['>probleme', 4.5], ['probleme', 3.5], ['>heute', 3],
   ];
   const TOTAL = STEPS.reduce((a, s) => a + s[1], 0);
+  const NAME = (window.WB.site && window.WB.site.name) || 'Korber Kopf';
   const CAPTION = {
-    heute: 'Korber Kopf · heute',
-    konzept: 'Korber Kopf · Beispiel: Wall-Mulde-System',
-    probleme: 'Korber Kopf · Beispiel: Problemzonen – Frost, Trockenheit, Feuchte, Wind',
+    heute: `${NAME} · heute`,
+    konzept: `${NAME} · Beispiel: Wall-Mulde-System`,
+    probleme: `${NAME} · Beispiel: Problemzonen – Frost, Trockenheit, Feuchte, Wind`,
   };
 
   function startCover(canvas, terrain) {

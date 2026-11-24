@@ -268,3 +268,17 @@ svg.pi { flex: none; }
 .legend-forms { font-size: 11px; color: #888; margin: 10px 0 0; }
 
 .side .pp-info { font-size: 13px; line-height: 1.45; color: #bbb; }
+
+/* Mehrere Berge */
+.cover-search .suggestions { max-height: min(52vh, 460px); overflow-y: auto; }
+.sugg.current strong::after { content: ' · geöffnet'; font-weight: 400; color: var(--grau); }
+#mountain-lagen { font-size: 12px; line-height: 1.45; margin-top: -4px; }
+.site-loading {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 50;
+  display: flex; flex-direction: column; gap: 6px; padding: 22px 28px; border-radius: 18px;
+  background: #111; color: #fff; font-size: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); text-align: center;
+}
+.site-loading strong { font-size: 20px; }
+.site-loading span { color: #aaa; }
+.site-loading a { color: #fff; }
+.cover-search .suggestions { top: auto; bottom: calc(100% + 8px); max-height: min(56vh, 520px); }
