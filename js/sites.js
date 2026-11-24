@@ -121,7 +121,7 @@
     for (const h of hosts) {
       try {
         const ctl = new AbortController();
-        const to = setTimeout(() => ctl.abort(), 25000);
+        const to = setTimeout(() => ctl.abort(), 45000);
         const r = await fetch(h, { method: 'POST', body: 'data=' + encodeURIComponent(q), signal: ctl.signal });
         clearTimeout(to);
         if (r.ok) return await r.json();
@@ -272,7 +272,7 @@
       if (!D || D.n !== N) {
         const ov = document.createElement('div');
         ov.className = 'site-loading';
-        ov.innerHTML = `<strong>${site.name}</strong><span>Geländemodell wird gebaut …</span>`;
+        ov.innerHTML = `<strong>${site.name}</strong><span>Geländemodell wird gebaut …</span><small>beim ersten Öffnen bis zu einer Minute, danach sofort</small>`;
         document.body.appendChild(ov);
         const status = (t) => (ov.querySelector('span').textContent = t + ' …');
         try {

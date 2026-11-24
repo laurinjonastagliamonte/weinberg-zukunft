@@ -284,3 +284,4 @@ svg.pi { flex: none; }
 .cover-search .suggestions { top: auto; bottom: calc(100% + 8px); max-height: min(56vh, 520px); }
 .stl-btn { margin: 4px 0 2px; width: 100%; }
 #stl-info { font-size: 12px; margin: 4px 0 10px; }
+.site-loading small { color: #777; font-size: 12px; }
