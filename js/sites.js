@@ -14,7 +14,7 @@
  */
 (function () {
   const WB = (window.WB = window.WB || {});
-  const V = '20261124f'; // Version der Skripte (gegen alten Browser-Cache)
+  const V = '20261124g'; // Version der Skripte (gegen alten Browser-Cache)
 
   const SITES = [
     { id: 'korber-kopf', ort: 'Korb', name: 'Korber Kopf', place: 'Korb, Rems-Murr-Kreis', lat: 48.8538, lon: 9.3672, stl: true,

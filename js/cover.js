@@ -80,6 +80,7 @@
 
     function resize() {
       const r = canvas.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return; // Startseite gerade versteckt
       dpr = window.devicePixelRatio || 1;
       w = Math.max(1, r.width);
       h = Math.max(1, r.height);
@@ -170,6 +171,7 @@
         raf = null;
       },
       start() {
+        resize(); // Größe neu messen, falls die Startseite versteckt war
         if (!raf) raf = requestAnimationFrame(frame);
       },
     };

@@ -24,6 +24,7 @@
     $('.topbar').classList.toggle('on-cover', step === 1);
     if (step !== 1 && cover) cover.stop();
     requestAnimationFrame(() => {
+      if (step !== state.step) return; // inzwischen weitergeschaltet
       if (step === 1) {
         if (!cover) cover = WB.startCover($('#waves'), T);
         else cover.start();
