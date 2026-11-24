@@ -102,8 +102,8 @@ Daten: Open-Meteo.com, CC BY 4.0.
 
 In der Bepflanzung lassen sich Pflanzen auswählen; sie erscheinen als Grundformen am 3D-Berg.
 Gepflanzt wird nur im Bereich `AREA` (`js/terrain.js`): bis 720 m um den Gipfel und mindestens 60 m Abstand
-zum Ort – also Berg und naher Hangfuß, nicht weit draußen in der Landschaft. Der Berg selbst läuft in der
-3D-Ansicht zum Rand hin aus (kein quadratischer Sockel mehr).
+zum Ort – also Berg und naher Hangfuß, nicht weit draußen in der Landschaft. Der Berg wird in der
+3D-Ansicht als quadratisches „Tuch“ gezeigt: nur die Oberfläche, ohne Sockel und Seitenwände.
 Baum = Ring · Nutzbaum = Punkt · Busch = Dreieck · Kraut/Gras = Kreuz · Rebe = Strich · Muldenrand = Quadrat.
 Standortregeln (Kuppe innen/Mitte/außen, Steilgürtel, Damm, Öffnung, Mulde, Böschung, Einzelbaum, Hangfuß)
 und Problemzonen, die eine Pflanze meidet, stehen in `js/data.js` → `plantList`.
