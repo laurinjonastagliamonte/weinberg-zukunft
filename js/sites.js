@@ -14,7 +14,7 @@
  */
 (function () {
   const WB = (window.WB = window.WB || {});
-  const V = '20261124d'; // Version der Skripte (gegen alten Browser-Cache)
+  const V = '20261124e'; // Version der Skripte (gegen alten Browser-Cache)
 
   const SITES = [
     { id: 'korber-kopf', ort: 'Korb', name: 'Korber Kopf', place: 'Korb, Rems-Murr-Kreis', lat: 48.8538, lon: 9.3672, stl: true,
@@ -37,7 +37,7 @@
       lagen: 'Breuningsweiler Holzenberg, Haselstein · Hanweiler Maien, Berg · Winnender Roßberg' },
     { id: 'hertmannsweiler', ort: 'Hertmannsweiler und Bürg', name: 'Hertmannsweiler / Bürg', place: 'Winnenden', lat: 48.887, lon: 9.438,
       lagen: 'Hertmannsweiler und Baacher Himmelreich · Bürger Schlossberg' },
-    { id: 'neustadt', ort: 'Neustadt und Beinstein', name: 'Söhrenberg / Großmulde', place: 'Waiblingen-Neustadt und -Beinstein', lat: 48.842, lon: 9.348,
+    { id: 'neustadt', ort: 'Neustadt und Beinstein', name: 'Söhrenberg / Großmulde', place: 'Waiblingen-Neustadt und -Beinstein', lat: 48.848, lon: 9.344,
       lagen: 'Neustädter Söhrenberg · Beinsteiner Großmulde' },
   ];
 
@@ -120,7 +120,10 @@
     let err;
     for (const h of hosts) {
       try {
-        const r = await fetch(h, { method: 'POST', body: 'data=' + encodeURIComponent(q) });
+        const ctl = new AbortController();
+        const to = setTimeout(() => ctl.abort(), 25000);
+        const r = await fetch(h, { method: 'POST', body: 'data=' + encodeURIComponent(q), signal: ctl.signal });
+        clearTimeout(to);
         if (r.ok) return await r.json();
         err = new Error('Overpass ' + r.status);
       } catch (e) { err = e; }
@@ -195,10 +198,35 @@
     return btoa(s);
   };
 
+  // Ortsmaske als Lauflängen: abwechselnd Anzahl Zellen „kein Ort“ / „Ort“, Basis 36, durch Punkte getrennt
+  const rleEncode = (T) => {
+    const out = [];
+    let cur = 0, n = 0;
+    for (let k = 0; k < T.length; k++) {
+      if (T[k] === cur) n++;
+      else { out.push(n.toString(36)); cur = T[k]; n = 1; }
+    }
+    out.push(n.toString(36));
+    return out.join('.');
+  };
+  const rleDecode = (str) => {
+    const T = new Uint8Array(N * N);
+    let k = 0, cur = 0;
+    for (const part of str.split('.')) {
+      const n = parseInt(part, 36);
+      if (cur) T.fill(1, k, k + n);
+      k += n; cur ^= 1;
+    }
+    return T;
+  };
+
   async function build(s, status) {
     const H = await heights(s, status);
     let tw = null, townNote = 'Ort aus OpenStreetMap';
-    try { tw = await town(s, status); } catch (e) { townNote = 'Ort konnte nicht geladen werden (OpenStreetMap nicht erreichbar)'; }
+    if (s.town) tw = rleDecode(s.town); // vorab aus OpenStreetMap berechnet (Stand 24.11.2026)
+    else {
+      try { tw = await town(s, status); } catch (e) { townNote = 'Ort konnte nicht geladen werden (OpenStreetMap nicht erreichbar)'; }
+    }
     let min = Infinity;
     for (const h of H) min = Math.min(min, h);
     const baseDm = Math.floor(min * 10) - 10;
@@ -260,5 +288,6 @@
     }
     await loadScripts();
   }
+  WB.siteTools = { town: (s) => town(s, () => {}), rleEncode };
   boot();
 })();
