@@ -15,7 +15,7 @@
       this.t = terrain;
       this.yaw = -0.55;
       this.pitch = 0.62;
-      this.zoom = 1;
+      this.zoom = 1.6; // nah am Berg, Ränder laufen ohnehin aus
       this.exag = 1; // Höhe unverzerrt (Modell 1:4000)
       this.mode = opts.mode || 'zonen'; // 'zonen' | 'hoehen' | 'sim' | 'reco'
       this.centerX = opts.centerX ?? 0.4; // Anteil der Breite (Platz für Panels)
@@ -64,7 +64,7 @@
         'wheel',
         (e) => {
           e.preventDefault();
-          this.zoom = Math.min(3, Math.max(0.6, this.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+          this.zoom = Math.min(4, Math.max(0.9, this.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
           this.invalidate();
         },
         { passive: false }
@@ -102,8 +102,9 @@
 
     project(x, y, z) {
       const t = this.t;
-      const X = x - t.SIZE / 2;
-      const Y = y - t.SIZE / 2;
+      // Mitte = Gipfel, damit der Berg (nicht der Ausschnitt) im Bild zentriert ist
+      const X = x - t.SUMMIT.x;
+      const Y = y - t.SUMMIT.y;
       const Z = (z - (t.minH + t.maxH) / 2) * this.exag;
       const cy = Math.cos(this.yaw);
       const sy = Math.sin(this.yaw);
@@ -146,6 +147,26 @@
       ctx.drawImage(this.base, 0, 0);
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (this.onOverlay) this.onOverlay(ctx, this);
+      this._fadeOut(ctx);
+    }
+
+    // Berg läuft nach außen weich aus: kein Viereck als Sockel, nur der Berg
+    _fadeOut(ctx) {
+      const t = this.t;
+      const c = this.project(t.SUMMIT.x, t.SUMMIT.y, (t.minH + t.maxH) / 2);
+      const scale = (this.zoom * Math.min(this.w, this.h)) / (t.SIZE * 1.25);
+      const r = (t.AREA_R + 260) * scale; // ganz ausgeblendet etwas außerhalb des Gebiets
+      const squash = Math.max(0.25, Math.sin(this.pitch));
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.translate(c[0], c[1]);
+      ctx.scale(1, squash);
+      const g = ctx.createRadialGradient(0, 0, r * 0.62, 0, 0, r);
+      g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(-this.w * 4, -this.h * 8, this.w * 8, this.h * 16);
+      ctx.restore();
     }
 
     _drawBase() {
@@ -160,34 +181,6 @@
         for (let i = 0; i < N; i++) P[j * N + i] = this.project(i * C, j * C, t.H[j * N + i]);
       this.P = P;
       const mode = this.mode;
-
-      // Sockel (freigestellter Block)
-      const base = t.minH - 25;
-      const edge = [];
-      for (let i = 0; i < N; i++) edge.push([i, 0]);
-      for (let j = 0; j < N; j++) edge.push([N - 1, j]);
-      for (let i = N - 1; i >= 0; i--) edge.push([i, N - 1]);
-      for (let j = N - 1; j >= 0; j--) edge.push([0, j]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-      ctx.lineWidth = 0.6;
-      ctx.beginPath();
-      edge.forEach(([i, j], k) => {
-        if (k % 3) return;
-        const a = P[j * N + i];
-        const b = this.project(i * C, j * C, base);
-        ctx.moveTo(a[0], a[1]);
-        ctx.lineTo(b[0], b[1]);
-      });
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-      ctx.beginPath();
-      edge.forEach(([i, j], k) => {
-        const b = this.project(i * C, j * C, base);
-        if (k === 0) ctx.moveTo(b[0], b[1]);
-        else ctx.lineTo(b[0], b[1]);
-      });
-      ctx.closePath();
-      ctx.stroke();
 
       // Drahtgitter
       ctx.strokeStyle = mode === 'zonen' ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.10)';
@@ -216,7 +209,7 @@
           if (mode === 'reco' && (!this.highlight || !on)) continue; // Bepflanzung: nur gewählte Zone andeuten
           ctx.globalAlpha = on ? dim : 0.12;
           const p = P[n];
-          ctx.fillStyle = on && this.highlight ? (mode === 'reco' ? '#6E6E6E' : '#F1E62B') : t.ZONES[z].color;
+          ctx.fillStyle = on && this.highlight ? (mode === 'reco' ? '#3A3A3A' : '#F1E62B') : t.ZONES[z].color;
           const r = 0.9 + Math.max(0, p[2]) / (t.SIZE * 1.1) + (on && this.highlight ? 0.4 : 0);
           ctx.fillRect(p[0] - r, p[1] - r, r * 2, r * 2);
         }

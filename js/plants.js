@@ -64,7 +64,7 @@
       const cells = [];
       let avoided = 0;
       for (let k = 0; k < T.N * T.N; k++) {
-        if (T.ZONE[k] === 'ort') continue;
+        if (T.ZONE[k] === 'ort' || !T.AREA[k]) continue; // nur am Berg, nicht in der Landschaft
         // welche Regel trifft zu? „einzel“ = einzelne Bäume, sehr dünn
         const w = parts.find((w) => (w === 'einzel' ? R.einzel(k) && hash(k, 7) < 1 / 45 : R[w](k)));
         if (!w) continue;

@@ -130,6 +130,29 @@
   const zoneAt = (x, y) => ZONE[cellAt(x, y)];
   const slopeAt = (x, y) => SLOPE[cellAt(x, y)];
 
+  // ---- Bewirtschaftungsgebiet: der Berg selbst, nicht die Landschaft drumherum ----
+  // bis AREA_R um den Gipfel und mit Abstand zum Ort (keine Pflanzung zwischen Häusern)
+  const AREA_R = 720;
+  const TOWN_GAP = 60;
+  const AREA = new Uint8Array(N * N);
+  {
+    const gap = Math.ceil(TOWN_GAP / CELL);
+    const near = new Uint8Array(N * N);
+    for (let k = 0; k < N * N; k++) {
+      if (!TOWN[k]) continue;
+      const i0 = k % N, j0 = Math.floor(k / N);
+      for (let dj = -gap; dj <= gap; dj++)
+        for (let di = -gap; di <= gap; di++) {
+          const i = i0 + di, j = j0 + dj;
+          if (i >= 0 && j >= 0 && i < N && j < N && di * di + dj * dj <= gap * gap) near[idx(i, j)] = 1;
+        }
+    }
+    for (let k = 0; k < N * N; k++) {
+      const d = Math.hypot((k % N) * CELL - SUMMIT.x, Math.floor(k / N) * CELL - SUMMIT.y);
+      AREA[k] = d <= AREA_R && !near[k] ? 1 : 0;
+    }
+  }
+
   // ---- Kennzahlen je Zone ----
   const DIRS = ['Nord', 'Nordost', 'Ost', 'Südost', 'Süd', 'Südwest', 'West', 'Nordwest'];
   function zoneStats() {
@@ -445,7 +468,7 @@
     synthetic: false,
     SIZE, N, CELL, SUMMIT, TOP: maxH, THRESHOLDS,
     H, SLOPE, ASPECT, ACC, ZONE, ZONES, ZONE_ORDER,
-    TOWN, DIST, BECKEN, KEYLINE, KEY_DH, VIS, OPENING, alongS, opening, alongDir, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
+    TOWN, AREA, AREA_R, DIST, BECKEN, KEYLINE, KEY_DH, VIS, OPENING, alongS, opening, alongDir, PROBLEM, PROBLEMS, PROBLEM_BITS, problemStats,
     heightAt, idx, zoneAt, slopeAt, distAt, leadDir, keylines, waterPaths, zoneStats, contours, profile, bestProfileDir,
     minH, maxH,
   };
