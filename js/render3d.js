@@ -213,6 +213,7 @@
         for (let n = 0; n < N * N; n++) {
           const z = t.ZONE[n];
           const on = !this.highlight || z === this.highlight;
+          if (mode === 'reco' && (!this.highlight || !on)) continue; // Bepflanzung: nur gewählte Zone andeuten
           ctx.globalAlpha = on ? dim : 0.12;
           const p = P[n];
           ctx.fillStyle = on && this.highlight ? (mode === 'reco' ? '#6E6E6E' : '#F1E62B') : t.ZONES[z].color;

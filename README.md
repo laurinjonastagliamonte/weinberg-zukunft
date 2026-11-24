@@ -8,7 +8,7 @@ Die Seite folgt dem Flowchart im FigJam-Board „Produktgestaltung WS 26/27“ (
 1. **Cover** – „Weinberge zukunftsorientiert denken“, animierte Draufsicht des Korber Kopfs als Zeichenraster (heute ↔ mit Konzept), Bergsuche
 2. **Analyse** – 3D-Drahtgitter des Bergs, Zonen nach Hangneigung, Höhenlinien
 3. **Simulation** – Regen direkt auf dem 3D-Modell: heute vs. mit Wall-Mulde-System, Zeitraum, Wallbruch
-4. **Empfehlung (Bepflanzung)** – Zone anklicken, rechts deren Pflanzen auswählen; sie erscheinen als Grundformen am 3D-Berg
+4. **Bepflanzung** – Zone anklicken, rechts deren Pflanzen auswählen; sie erscheinen als Grundformen am 3D-Berg
 
 ## Öffnen
 

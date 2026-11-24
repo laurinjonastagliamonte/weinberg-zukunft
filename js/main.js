@@ -1,7 +1,7 @@
 /*
  * Ablauf der Seite nach dem Flowchart:
- * 01 Berg wählen → 02 Analyse → 03 Simulation → 04 Empfehlung
- * Analyse, Simulation und Empfehlung laufen alle auf dem 3D-Modell des Bergs.
+ * 01 Berg wählen → 02 Analyse → 03 Simulation → 04 Bepflanzung
+ * Analyse, Simulation und Bepflanzung laufen alle auf dem 3D-Modell des Bergs.
  */
 (function () {
   const WB = window.WB;
@@ -340,11 +340,11 @@
       .join('');
   }
 
-  // ---------- 04 Empfehlung (Zone auf dem 3D-Modell wählen) ----------
+  // ---------- 04 Bepflanzung (Zone auf dem 3D-Modell wählen) ----------
   function initReco() {
     if (views.reco) return views.reco.resize();
     const v = (views.reco = new WB.Mountain3D($('#reco3d'), T, { mode: 'reco' }));
-    v.showConcept = true;
+    v.showConcept = false; // Bepflanzung: nur Höhenlinien zur Orientierung und Pflanzen
     v.onPick = (hit) => selectZone(hit.zone);
     initPlants(v);
     bindToggles('.view-reco', v);
@@ -382,11 +382,7 @@
       : plantSel.size
         ? `${plantSel.size} Pflanzen sichtbar. Klick auf eine Pflanze hebt sie gelb hervor, zweiter Klick blendet sie aus.`
         : 'Pflanze anklicken – sie erscheint am Berg. Zweiter Klick blendet sie aus.';
-    // mit Pflanzen das Konzept-Gitter ausblenden, damit die Grundformen lesbar sind
-    const v = views.reco;
-    const conceptOn = plantSel.size === 0;
-    if (v.showConcept !== conceptOn) { v.showConcept = conceptOn; v.invalidate(); }
-    else v.draw();
+    views.reco.draw();
   }
 
   function selectZone(key) {
