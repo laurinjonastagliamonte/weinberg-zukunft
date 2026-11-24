@@ -352,21 +352,8 @@
       .map((z) => `<button data-zone="${z.key}"><i style="background:${z.color}"></i>${z.name}</button>`)
       .join('');
     $$('#zone-tabs button').forEach((b) => b.addEventListener('click', () => selectZone(b.dataset.zone)));
-    $('#toolkit').innerHTML = WB.content.toolkit.map(([a, b]) => `<li><strong>${a}</strong> – ${b}</li>`).join('');
-    const total = stats.filter((z) => z.key !== 'ort').reduce((a, z) => a + z.ha, 0);
-    const vers = stats.filter((z) => z.key === 'mittel' || z.key === 'auslauf').reduce((a, z) => a + z.ha, 0);
-    $('#facts').innerHTML = [
-      ['Berg', T.name],
-      ['Gipfel', `${Math.round(T.TOP)} m`],
-      ['Fläche Hang (ohne Ort)', `${total.toFixed(0)} ha`],
-      ['Fläche zum Versickern', `${vers.toFixed(0)} ha`],
-      ['Grenze Leiten / Versickern', '30 %'],
-      ['Datenbasis', 'STL-Modell 1:4000'],
-    ]
-      .map(([a, b]) => `<li><span>${a}</span><strong>${b}</strong></li>`)
-      .join('');
     if (state.zone) selectZone(state.zone);
-    else $('#zone-detail').innerHTML = '<p class="eyebrow">04 · Empfehlung</p><h2>Zone wählen</h2><p class="muted">Klicke oben eine Zone an oder direkt auf den Berg. Links kannst du Pflanzen auswählen – sie erscheinen am Berg.</p>';
+    else $('#zone-detail').innerHTML = '<p class="eyebrow">04 · Bepflanzung</p><h2>Zone wählen</h2><p class="muted">Klicke oben eine Zone an oder direkt auf den Berg. Rechts erscheinen dann die Pflanzen dieser Zone – auswählen, und sie werden am Berg angezeigt.</p>';
   }
   // Pflanzen auswählen und am Berg zeigen
   const plantSel = new Set();
@@ -375,17 +362,6 @@
   function initPlants(v) {
     placed = WB.plants.placePlants(T, WB.content.plantList);
     v.onOverlay = (ctx, view) => WB.plants.drawPlants(ctx, view, placed, plantSel, plantActive);
-    const groups = {};
-    for (const p of placed) (groups[p.form] ||= []).push(p);
-    $('#pp-groups').innerHTML = Object.entries(WB.plants.FORMS)
-      .filter(([f]) => groups[f])
-      .map(([f, g]) => `<div class="pp-group"><span>${g.name}</span>${groups[f]
-        .map((p) => `<button class="pp-chip${p.cells.length ? '' : ' none'}" data-plant="${p.id}">${WB.plants.icon(p.form)}${p.name}</button>`)
-        .join('')}</div>`)
-      .join('');
-    $$('#pp-groups .pp-chip').forEach((b) => b.addEventListener('click', () => togglePlant(+b.dataset.plant)));
-    $('#pp-all').addEventListener('click', () => { placed.forEach((p) => plantSel.add(p.id)); plantActive = null; refreshPlants(); });
-    $('#pp-none').addEventListener('click', () => { plantSel.clear(); plantActive = null; refreshPlants(); });
   }
   function togglePlant(id) {
     if (plantSel.has(id) && plantActive === id) { plantSel.delete(id); plantActive = null; }
@@ -393,19 +369,19 @@
     refreshPlants();
   }
   function refreshPlants() {
-    $$('.pp-chip').forEach((b) => {
+    $$('#zone-detail .pp-chip').forEach((b) => {
       const id = +b.dataset.plant;
       b.classList.toggle('on', plantSel.has(id) && plantActive !== id);
       b.classList.toggle('active', plantActive === id);
     });
-    $$('#zone-detail .chip[data-plant]').forEach((c) => c.classList.toggle('on', plantSel.has(+c.dataset.plant)));
     const p = placed.find((x) => x.id === plantActive);
-    $('#pp-info').innerHTML = p
+    const info = $('#pp-info');
+    if (info) info.innerHTML = p
       ? `<strong>${p.name}</strong> · ${p.info} · ${p.cells.length ? `${p.zones.join(', ')} · ${p.cells.length} Standorte` : 'kein passender Standort im Ausschnitt'}` +
         (p.avoided ? ` · ${p.avoided} Stellen ausgelassen (${(p.meide || []).map((m) => T.PROBLEMS[m].name).join(', ')})` : '')
       : plantSel.size
         ? `${plantSel.size} Pflanzen sichtbar. Klick auf eine Pflanze hebt sie gelb hervor, zweiter Klick blendet sie aus.`
-        : 'Pflanze wählen – sie wird am Berg als Grundform angezeigt.';
+        : 'Pflanze anklicken – sie erscheint am Berg. Zweiter Klick blendet sie aus.';
     // mit Pflanzen das Konzept-Gitter ausblenden, damit die Grundformen lesbar sind
     const v = views.reco;
     const conceptOn = plantSel.size === 0;
@@ -421,34 +397,32 @@
     $$('#zone-tabs button').forEach((b) => b.classList.toggle('active', b.dataset.zone === key));
     const z = stats.find((s) => s.key === key);
     const c = WB.content.zones[key] || WB.content.ortInfo;
-    const groups = Object.entries(c.plants)
-      .map(([g, list]) => `<div class="group">${g}</div><div class="chips dark">${list
-        .map((name) => {
-          const pl = placed.find((x) => x.name === name || x.name.split(' & ').includes(name) || (name === 'Reben alle 3 m' && x.name === 'Reben') || (name === 'Hasel' && x.name === 'Haselnuss'));
-          return pl ? `<span class="chip clickable${plantSel.has(pl.id) ? ' on' : ''}" data-plant="${pl.id}">${WB.plants.icon(pl.form)} ${name}</span>` : `<span class="chip">${name}</span>`;
-        })
+    // Pflanzen, die in dieser Zone Standorte haben, nach Grundform gruppiert
+    const here = placed.filter((p) => p.cells.some((k) => T.ZONE[k] === key));
+    const groups = {};
+    for (const p of here) (groups[p.form] ||= []).push(p);
+    const list = Object.entries(WB.plants.FORMS)
+      .filter(([f]) => groups[f])
+      .map(([f, g]) => `<div class="pp-group"><span>${g.name}</span>${groups[f]
+        .map((p) => `<button class="pp-chip" data-plant="${p.id}">${WB.plants.icon(p.form)}${p.name}</button>`)
         .join('')}</div>`)
       .join('');
-    const probs =
-      key === 'ort'
-        ? ''
-        : (() => {
-            const list = T.problemStats(key).filter((p) => p.share >= 0.05);
-            if (!list.length) return '';
-            return `<div class="group">Problemzonen hier</div><div class="probs">${list
-              .map((p) => `<div class="prob" style="border-color:${p.color}"><b>${p.name} · ${Math.round(p.share * 100)} % der Zone</b>${WB.content.problemMeasures[p.key]}</div>`)
-              .join('')}</div>`;
-          })();
     $('#zone-detail').innerHTML = `
-      <p class="eyebrow">04 · Empfehlung</p>
+      <p class="eyebrow">04 · Bepflanzung</p>
       <h2>${z.name}</h2>
-      <p class="muted">${z.range} · ${z.water} · ${Math.round(z.share * 100)} % der Fläche (${z.ha.toFixed(1)} ha)</p>
-      <p>${c.idea}</p>
-      <ul class="measures">${c.measures.map((m) => `<li>${m}</li>`).join('')}</ul>
-      ${groups}
-      ${probs}
+      <p class="muted">${z.range} · ${Math.round(z.share * 100)} % der Fläche (${z.ha.toFixed(1)} ha)</p>
+      <p class="zone-idea">${c.idea}</p>
+      ${here.length ? `<div class="pp-head"><strong>Pflanzen hier</strong><span><button class="linkbtn" id="pp-zone-all">alle zeigen</button> · <button class="linkbtn" id="pp-none">keine</button></span></div>
+      ${list}
+      <p class="pp-info" id="pp-info"></p>
+      <p class="legend-forms">○ Baum · ● Nutzbaum · ▲ Busch · ✕ Kraut/Gras · ▬ Rebe · □ Muldenrand</p>` : '<p class="muted">Hier wird nicht gepflanzt.</p>'}
       ${c.open ? `<div class="open">${c.open}</div>` : ''}`;
-    $$('#zone-detail .chip[data-plant]').forEach((c) => c.addEventListener('click', () => togglePlant(+c.dataset.plant)));
+    $$('#zone-detail .pp-chip').forEach((b) => b.addEventListener('click', () => togglePlant(+b.dataset.plant)));
+    const all = $('#pp-zone-all');
+    if (all) all.addEventListener('click', () => { plantSel.clear(); here.forEach((p) => plantSel.add(p.id)); plantActive = null; refreshPlants(); });
+    const none = $('#pp-none');
+    if (none) none.addEventListener('click', () => { plantSel.clear(); plantActive = null; refreshPlants(); });
+    refreshPlants();
   }
 
   // ---------- Start ----------

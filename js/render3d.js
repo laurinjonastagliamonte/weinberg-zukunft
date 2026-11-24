@@ -215,7 +215,7 @@
           const on = !this.highlight || z === this.highlight;
           ctx.globalAlpha = on ? dim : 0.12;
           const p = P[n];
-          ctx.fillStyle = on && this.highlight ? '#F1E62B' : t.ZONES[z].color;
+          ctx.fillStyle = on && this.highlight ? (mode === 'reco' ? '#6E6E6E' : '#F1E62B') : t.ZONES[z].color;
           const r = 0.9 + Math.max(0, p[2]) / (t.SIZE * 1.1) + (on && this.highlight ? 0.4 : 0);
           ctx.fillRect(p[0] - r, p[1] - r, r * 2, r * 2);
         }

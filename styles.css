@@ -262,3 +262,9 @@ svg.pi { flex: none; }
 #wx-analyse button.active { background: #fff; color: #111; }
 
 .wx-show { margin-top: 12px; padding: 9px 14px; font-size: 13px; }
+
+.zone-idea { font-size: 14px; line-height: 1.5; color: #ddd; }
+.side .pp-head { margin-top: 18px; }
+.legend-forms { font-size: 11px; color: #888; margin: 10px 0 0; }
+
+.side .pp-info { font-size: 13px; line-height: 1.45; color: #bbb; }
